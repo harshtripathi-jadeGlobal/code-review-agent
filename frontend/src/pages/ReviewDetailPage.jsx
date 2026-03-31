@@ -3,7 +3,6 @@ import { useParams, useNavigate } from 'react-router-dom'
 import axios from 'axios'
 import ReviewResults from '../components/ReviewResults'
 import ScoreRing from '../components/ScoreRing'
-import styles from './ReviewDetailPage.module.css'
 import { ArrowLeft, FileCode, Clock } from 'lucide-react'
 
 export default function ReviewDetailPage() {
@@ -21,44 +20,73 @@ export default function ReviewDetailPage() {
   }, [id])
 
   return (
-    <div className={styles.page}>
-      <header className={styles.header}>
-        <button className={styles.back} onClick={() => navigate('/history')}>
+    <div className="flex flex-col h-screen overflow-hidden bg-gray-950 text-white">
+
+      {/* Header */}
+      <header className="flex-shrink-0 px-8 pt-7 pb-5 border-b border-gray-800">
+
+        {/* Back Button */}
+        <button
+          onClick={() => navigate('/history')}
+          className="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors duration-150 mb-4"
+        >
           <ArrowLeft size={15} />
           <span>History</span>
         </button>
 
+        {/* File Info Row */}
         {review && (
-          <div className={styles.headerInfo}>
-            <div className={styles.fileRow}>
-              <FileCode size={15} color="var(--text-muted)" />
-              <span className={styles.filename}>{review.filename}</span>
-              <span className={`badge badge-${review.language === 'python' ? 'style' : 'performance'}`}>
+          <div className="flex items-center justify-between gap-4 flex-wrap">
+
+            {/* Left: filename + language badge */}
+            <div className="flex items-center gap-2 min-w-0">
+              <FileCode size={15} className="text-gray-400 flex-shrink-0" />
+              <span className="font-mono text-sm font-medium text-white truncate">
+                {review.filename}
+              </span>
+              <span className={`text-xs px-2 py-0.5 rounded-full font-medium flex-shrink-0 ${
+                review.language === 'python'
+                  ? 'bg-blue-900/50 text-blue-300'
+                  : 'bg-purple-900/50 text-purple-300'
+              }`}>
                 {review.language}
               </span>
             </div>
-            <div className={styles.headerRight}>
-              <span className={styles.date}>
+
+            {/* Right: date + score ring */}
+            <div className="flex items-center gap-4 flex-shrink-0">
+              <span className="flex items-center gap-1.5 font-mono text-xs text-gray-400">
                 <Clock size={12} />
                 {new Date(review.created_at).toLocaleString()}
               </span>
               <ScoreRing score={review.score} size={48} />
             </div>
+
           </div>
         )}
       </header>
 
-      <div className={styles.body}>
+      {/* Body */}
+      <div className="flex-1 overflow-y-auto px-8 py-5">
+
+        {/* Loading */}
         {loading && (
-          <div className={styles.loading}>
-            <div className={styles.spinner} />
+          <div className="flex items-center gap-3 py-8 text-gray-400 text-sm">
+            <div className="w-4 h-4 border-2 border-gray-700 border-t-blue-500 rounded-full animate-spin" />
             Loading review…
           </div>
         )}
-        {error && <div className={styles.error}>{error}</div>}
-        {review && (
-          <ReviewResults result={review} />
+
+        {/* Error */}
+        {error && (
+          <div className="px-4 py-3 rounded-lg bg-red-900/20 border border-red-700/40 text-red-300 text-sm">
+            {error}
+          </div>
         )}
+
+        {/* Review Results */}
+        {review && <ReviewResults result={review} />}
+
       </div>
     </div>
   )

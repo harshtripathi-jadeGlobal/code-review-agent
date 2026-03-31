@@ -52,7 +52,7 @@ async def call_groq(code: str, language: str) -> dict:
             },
         )
 
-        print("STATUS:", resp.status_code)
+        # print("STATUS:", resp.status_code)
         print("RESPONSE:", resp.text)
 
         resp.raise_for_status()

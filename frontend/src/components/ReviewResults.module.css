@@ -1,0 +1,143 @@
+.results {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  animation: fadeUp 0.35s both;
+}
+
+/* ── Summary card ─────────────────────────────────────── */
+.summaryCard {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.summaryTop {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.summaryMeta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.issueTotal {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.counters {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.counter {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 10px 6px;
+  border-radius: var(--radius);
+  border: 1px solid transparent;
+}
+
+.counterCritical { background: var(--critical-dim); border-color: rgba(255,77,106,0.2); }
+.counterWarning  { background: var(--warning-dim);  border-color: rgba(255,171,46,0.2); }
+.counterInfo     { background: var(--info-dim);     border-color: rgba(77,184,255,0.2); }
+
+.counterNum {
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: 22px;
+  line-height: 1;
+}
+
+.counterCritical .counterNum { color: var(--critical); }
+.counterWarning  .counterNum { color: var(--warning); }
+.counterInfo     .counterNum { color: var(--info); }
+
+.counterLabel {
+  font-family: var(--mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--text-muted);
+}
+
+.summary {
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.6;
+  padding-top: 4px;
+  border-top: 1px solid var(--border);
+}
+
+/* ── Filters ──────────────────────────────────────────── */
+.filters {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.filterGroup {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.filterChip {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 11px;
+  border-radius: 99px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-family: var(--sans);
+  cursor: pointer;
+  transition: all var(--transition);
+  text-transform: capitalize;
+}
+
+.filterChip:hover {
+  border-color: var(--border-hi);
+  color: var(--text);
+}
+
+.filterChip.active {
+  background: var(--accent-dim);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* ── Issue list ───────────────────────────────────────── */
+.issueList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.noIssues {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 20px;
+  color: var(--text-muted);
+  font-size: 13px;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-lg);
+  justify-content: center;
+}

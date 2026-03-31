@@ -1,0 +1,347 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 28px 32px 20px;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.headerLeft {}
+
+.title {
+  font-family: var(--display);
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: -0.02em;
+  margin-bottom: 3px;
+}
+
+.subtitle {
+  font-size: 13px;
+  color: var(--text-muted);
+  font-weight: 300;
+}
+
+.headerScore {
+  display: flex;
+  align-items: center;
+}
+
+.workspace {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  flex: 1;
+  overflow: hidden;
+  gap: 0;
+}
+
+/* ── Editor panel ─────────────────────────────────────── */
+.editorPanel {
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.editorToolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-card);
+  flex-shrink: 0;
+  gap: 10px;
+}
+
+.filenameWrapper {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.filenameInput {
+  background: transparent;
+  border: none;
+  outline: none;
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--text-muted);
+  width: 120px;
+}
+
+.filenameInput:focus {
+  color: var(--text);
+}
+
+.toolbarActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.uploadBtn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all var(--transition);
+  background: transparent;
+}
+
+.uploadBtn:hover {
+  border-color: var(--border-hi);
+  color: var(--text);
+}
+
+.sampleBtn {
+  padding: 5px 10px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  font-size: 12px;
+  font-family: var(--sans);
+  transition: all var(--transition);
+  background: transparent;
+}
+
+.sampleBtn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.resetBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  color: var(--text-muted);
+  transition: all var(--transition);
+}
+
+.resetBtn:hover {
+  border-color: var(--critical);
+  color: var(--critical);
+}
+
+.editorWrap {
+  flex: 1;
+  overflow: auto;
+  position: relative;
+  transition: box-shadow var(--transition);
+}
+
+.editorWrap.dragging {
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+
+.dropHint {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  color: var(--text-dim);
+  font-size: 13px;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.editorFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  border-top: 1px solid var(--border);
+  background: var(--bg-card);
+  flex-shrink: 0;
+}
+
+.lineCount {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
+.reviewBtn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 20px;
+  border-radius: var(--radius);
+  background: var(--accent);
+  color: #0d0e11;
+  font-family: var(--display);
+  font-weight: 600;
+  font-size: 13px;
+  letter-spacing: 0.01em;
+  transition: all var(--transition);
+  cursor: pointer;
+  border: none;
+}
+
+.reviewBtn:hover:not(:disabled) {
+  background: #f0ff7a;
+  box-shadow: 0 0 20px var(--accent-glow);
+}
+
+.reviewBtn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(0,0,0,0.2);
+  border-top-color: #0d0e11;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+/* ── Results panel ────────────────────────────────────── */
+.resultsPanel {
+  overflow-y: auto;
+  padding: 20px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.errorBanner {
+  padding: 12px 16px;
+  border-radius: var(--radius);
+  background: var(--critical-dim);
+  border: 1px solid rgba(255,77,106,0.3);
+  color: var(--critical);
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.emptyState {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 12px;
+  padding: 48px 24px;
+  min-height: 400px;
+}
+
+.emptyIcon {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--bg-raised);
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-dim);
+}
+
+.emptyState h3 {
+  font-family: var(--display);
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.emptyState p {
+  font-size: 13px;
+  color: var(--text-muted);
+  max-width: 280px;
+  line-height: 1.7;
+}
+
+/* ── Loading ──────────────────────────────────────────── */
+.loadingState {
+  padding: 32px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.loadingBar {
+  height: 2px;
+  background: var(--border);
+  border-radius: 1px;
+  overflow: hidden;
+}
+
+.loadingProgress {
+  height: 100%;
+  background: var(--accent);
+  width: 30%;
+  border-radius: 1px;
+  animation: loadingSlide 1.5s ease-in-out infinite;
+}
+
+@keyframes loadingSlide {
+  0%   { transform: translateX(-100%); width: 30%; }
+  50%  { width: 60%; }
+  100% { transform: translateX(400%); width: 30%; }
+}
+
+.loadingSteps {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.loadingStep {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: var(--text-muted);
+  animation: fadeUp 0.4s both;
+}
+
+.loadingDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  animation: pulse-dot 1.2s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+@media (max-width: 900px) {
+  .workspace {
+    grid-template-columns: 1fr;
+    overflow-y: auto;
+  }
+  .editorPanel {
+    height: 50vh;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+  }
+  .page {
+    height: auto;
+    overflow: visible;
+  }
+}

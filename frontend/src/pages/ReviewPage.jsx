@@ -31,6 +31,14 @@ def authenticate(username, password):
     return False
 `
 
+// ── Derive editor language from filename extension as fallback ──
+// Used when auto-detection hasn't fired yet (e.g. on first paste)
+function getLangFromFilename(filename) {
+  const ext = filename.split('.').pop().toLowerCase()
+  const match = LANGUAGE_PROFILES.find(l => l.extension === `.${ext}`)
+  return match?.editorLang || 'plaintext'
+}
+
 export default function ReviewPage() {
   const [code, setCode]                 = useState('')
   const [filename, setFilename]         = useState('main.py')
@@ -38,16 +46,23 @@ export default function ReviewPage() {
   const [result, setResult]             = useState(null)
   const [error, setError]               = useState(null)
   const [dragging, setDragging]         = useState(false)
-  const [detectedLang, setDetectedLang] = useState(null)
+  const [detectedLang, setDetectedLang] = useState(null)    // detect language on the editor
 
-  const activeLangName   = detectedLang?.name || (filename.endsWith('.py') ? 'python' : 'javascript')
-  const activeEditorLang = detectedLang?.editorLang || 'javascript'
+  // Detected lang always wins; fallback derives from filename extension
+  const activeEditorLang = detectedLang?.editorLang || getLangFromFilename(filename)
   const acceptedExtensions = LANGUAGE_PROFILES.map(l => l.extension).join(',')
 
+  // ── Handle code changes (typing or pasting) ──────────────────
   const handleCodeChange = (newCode) => {
     setCode(newCode)
-    if (!newCode.trim()) { setDetectedLang(null); return }
+
+    if (!newCode.trim()) {
+      setDetectedLang(null)
+      return
+    }
+
     const lang = detectLanguage(newCode)
+
     if (lang) {
       setDetectedLang(lang)
       setFilename(prev => syncFilenameExtension(prev, lang.extension))
@@ -72,10 +87,14 @@ export default function ReviewPage() {
     setDetectedLang(null); setFilename('main.py')
   }
 
+  // ── File upload: trust the file's own extension ──────────────
   const handleFile = (file) => {
     if (!file) return
     setFilename(file.name)
-    setDetectedLang(null)
+    // Find and set the profile from the file extension immediately
+    const ext = '.' + file.name.split('.').pop().toLowerCase()
+    const profile = LANGUAGE_PROFILES.find(l => l.extension === ext)
+    setDetectedLang(profile || null)
     const reader = new FileReader()
     reader.onload = (e) => setCode(e.target.result)
     reader.readAsText(file)
@@ -116,15 +135,24 @@ export default function ReviewPage() {
               <input
                 className="bg-transparent font-mono text-sm text-white placeholder-gray-500 outline-none w-36 truncate"
                 value={filename}
-                onChange={(e) => { setFilename(e.target.value); setDetectedLang(null) }}
+                onChange={(e) => {
+                  const newName = e.target.value
+                  setFilename(newName)
+                  // Re-derive language from the new extension as user types
+                  const ext = '.' + newName.split('.').pop().toLowerCase()
+                  const profile = LANGUAGE_PROFILES.find(l => l.extension === ext)
+                  setDetectedLang(profile || null)
+                }}
                 placeholder="filename.py"
               />
+              {/* Language badge — shows detected or extension-derived language */}
               {detectedLang && (
                 <span className={`flex-shrink-0 text-xs px-2 py-0.5 rounded-full font-medium ${detectedLang.badgeClass}`}>
                   {detectedLang.name}
                 </span>
               )}
             </div>
+
             <div className="flex items-center gap-2">
               <label className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-white border border-gray-700 hover:border-gray-500 rounded-md px-2.5 py-1.5 cursor-pointer transition-colors">
                 <Upload size={13} />
@@ -135,15 +163,18 @@ export default function ReviewPage() {
               <button
                 className="text-xs text-gray-400 hover:text-white border border-gray-700 hover:border-gray-500 rounded-md px-2.5 py-1.5 transition-colors"
                 onClick={() => {
-                  setCode(SAMPLE_CODE); setFilename('main.py')
+                  setCode(SAMPLE_CODE)
+                  setFilename('main.py')
                   setDetectedLang(LANGUAGE_PROFILES.find(l => l.name === 'python'))
                 }}
               >
                 Load sample
               </button>
               {code && (
-                <button className="text-gray-400 hover:text-white border border-gray-700 hover:border-gray-500 rounded-md p-1.5 transition-colors"
-                  onClick={handleReset}>
+                <button
+                  className="text-gray-400 hover:text-white border border-gray-700 hover:border-gray-500 rounded-md p-1.5 transition-colors"
+                  onClick={handleReset}
+                >
                   <RotateCcw size={13} />
                 </button>
               )}
@@ -152,7 +183,9 @@ export default function ReviewPage() {
 
           {/* Editor */}
           <div
-            className={`relative flex-1 overflow-hidden transition-all duration-150 ${dragging ? 'ring-2 ring-inset ring-blue-500 bg-blue-950/20' : ''}`}
+            className={`relative flex-1 overflow-hidden transition-all duration-150 ${
+              dragging ? 'ring-2 ring-inset ring-blue-500 bg-blue-950/20' : ''
+            }`}
             onDrop={handleDrop} onDragOver={handleDragOver} onDragLeave={handleDragLeave}
           >
             {!code && (
@@ -161,23 +194,41 @@ export default function ReviewPage() {
                 <span className="text-sm">Drop a file here or start typing</span>
               </div>
             )}
-            <CodeEditor value={code} onChange={handleCodeChange} language={activeEditorLang} />
+            <CodeEditor
+              value={code}
+              onChange={handleCodeChange}
+              language={activeEditorLang}
+            />
           </div>
 
           {/* Footer */}
           <div className="flex items-center justify-between px-4 py-3 border-t border-gray-800 bg-gray-900 flex-shrink-0">
-            <span className="font-mono text-xs text-gray-500">
-              {code ? `${code.split('\n').length} lines` : '—'}
-            </span>
+            {/* Line count + active language indicator */}
+            <div className="flex items-center gap-3">
+              <span className="font-mono text-xs text-gray-500">
+                {code ? `${code.split('\n').length} lines` : '—'}
+              </span>
+              {activeEditorLang && activeEditorLang !== 'plaintext' && (
+                <span className="font-mono text-xs text-gray-600">
+                  {activeEditorLang}
+                </span>
+              )}
+            </div>
             <button
               onClick={handleSubmit}
               disabled={loading || !code.trim()}
               className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold bg-blue-600 hover:bg-blue-500 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
             >
               {loading ? (
-                <><div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />Analysing…</>
+                <>
+                  <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  Analysing…
+                </>
               ) : (
-                <><Play size={14} fill="currentColor" />Run Review</>
+                <>
+                  <Play size={14} fill="currentColor" />
+                  Run Review
+                </>
               )}
             </button>
           </div>
@@ -201,7 +252,6 @@ export default function ReviewPage() {
                 Paste your code, then hit Run Review. The agent will check for bugs,
                 security issues, performance problems, and style violations.
               </p>
-              {/* Supported languages — auto-generated from LANGUAGE_PROFILES */}
               <div className="flex flex-wrap justify-center gap-1.5 mt-2 max-w-sm">
                 {LANGUAGE_PROFILES.map(lang => (
                   <span key={lang.name} className={`text-xs px-2 py-0.5 rounded-full font-medium ${lang.badgeClass}`}>

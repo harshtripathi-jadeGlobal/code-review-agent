@@ -33,18 +33,19 @@ export const LANGUAGE_PROFILES = [
     extension: '.js',
     editorLang: 'javascript',
     badgeClass: 'bg-yellow-900/50 text-yellow-300',
-    signals: [
-      /^\s*(const|let|var)\s+\w+\s*=/m, // const/let/var x =
-      /=>\s*[{(]/,                       // arrow functions
-      /^\s*import\s+.*from\s+['"]/m,     // import x from 'y'
-      /^\s*export\s+(default|const|function)/m, // export
-      /console\.(log|error|warn)\s*\(/,  // console.log
-      /===|!==/,                          // strict equality
-      /document\.|window\.|querySelector/, // DOM APIs
-      /\.then\s*\(|\.catch\s*\(/,         // promises
-      /require\s*\(\s*['"]/,              // require('x')
-      /\bundefined\b|\bnull\b/,           // JS primitives
-    ],
+   signals: [
+  /^\s*(const|let|var)\s+\w+\s*=/m,
+  /=>/,
+  /^\s*function\s+\w+\s*\(/m,
+  /console\.(log|error|warn)\s*\(/,
+  /===|!==/,
+  /document\.|window\.|querySelector/,
+  /\.then\s*\(|\.catch\s*\(/,
+  /require\s*\(\s*['"]/,
+  /\bundefined\b|\bnull\b/,
+  /for\s*\(|while\s*\(/,        // ✅ NEW
+  /if\s*\(/,                   // ✅ NEW
+],
   },
   {
     name: 'typescript',

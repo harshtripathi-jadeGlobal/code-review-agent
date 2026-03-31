@@ -4,36 +4,40 @@ import axios from 'axios'
 import ScoreRing from '../components/ScoreRing'
 import { Clock, FileCode, ChevronRight, BarChart3, AlertTriangle, TrendingUp, Shield } from 'lucide-react'
 
-function timeAgo(iso) {
-  const diff = Date.now() - new Date(iso).getTime()
-  const mins  = Math.floor(diff / 60000)
-  const hours = Math.floor(diff / 3600000)
-  const days  = Math.floor(diff / 86400000)
-  if (mins < 1)  return 'just now'
-  if (mins < 60) return `${mins}m ago`
-  if (hours < 24) return `${hours}h ago`
-  return `${days}d ago`
+// ✅ NEW: Exact time formatter (IST)
+function formatTime(iso) {
+  if (!iso) return ""
+
+  // ensure UTC parsing
+  const date = new Date(iso.endsWith("Z") ? iso : iso + "Z")
+  const now = new Date()
+
+  const isToday = date.toDateString() === now.toDateString()
+
+  if (isToday) {
+    return date.toLocaleTimeString("en-IN", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true
+    })
+  }
+
+  return date.toLocaleString("en-IN", {
+    day: "numeric",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true
+  })
 }
 
-export default function HistoryPage() {
-  const [history, setHistory] = useState([])
-  const [stats, setStats]     = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError]     = useState(null)
+export default function HistoryPage({ stats, history, loading, error }) {
+  
+
+ 
   const navigate = useNavigate()
 
-  useEffect(() => {
-    Promise.all([
-      axios.get('/api/history'),
-      axios.get('/api/stats'),
-    ])
-      .then(([h, s]) => {
-        setHistory(h.data)
-        setStats(s.data)
-      })
-      .catch(() => setError('Could not load history. Make sure the backend is running.'))
-      .finally(() => setLoading(false))
-  }, [])
+
 
   return (
     <div className="min-h-screen bg-gray-950 text-white px-6 py-8">
@@ -46,7 +50,7 @@ export default function HistoryPage() {
 
       {/* Stats Row */}
       {stats && (
-        <div className="grid  grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
           <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 flex items-center gap-3">
             <div className="text-blue-400"><BarChart3 size={16} /></div>
             <div>
@@ -114,7 +118,7 @@ export default function HistoryPage() {
                 style={{ animationDelay: `${i * 0.04}s` }}
                 className="w-full bg-gray-900 hover:bg-gray-800 border border-gray-800 hover:border-gray-600 rounded-xl px-5 py-4 flex items-center justify-between transition-all duration-200 text-left"
               >
-                {/* Left side */}
+                {/* Left */}
                 <div className="flex items-center gap-3">
                   <div className="bg-gray-800 p-2 rounded-lg text-gray-400">
                     <FileCode size={15} />
@@ -122,7 +126,6 @@ export default function HistoryPage() {
                   <div>
                     <div className="text-sm font-semibold text-white">{item.filename}</div>
                     <div className="flex items-center gap-2 mt-1">
-                      {/* Language Badge */}
                       <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
                         item.language === 'python'
                           ? 'bg-blue-900/50 text-blue-300'
@@ -130,16 +133,17 @@ export default function HistoryPage() {
                       }`}>
                         {item.language}
                       </span>
-                      {/* Time */}
+
+                      {/* ✅ FIXED TIME */}
                       <span className="flex items-center gap-1 text-xs text-gray-500">
                         <Clock size={11} />
-                        {timeAgo(item.created_at)}
+                        {formatTime(item.created_at)}
                       </span>
                     </div>
                   </div>
                 </div>
 
-                {/* Right side */}
+                {/* Right */}
                 <div className="flex items-center gap-3">
                   <div className="flex items-center gap-2">
                     {item.critical_count > 0 && (
@@ -158,6 +162,7 @@ export default function HistoryPage() {
                       </span>
                     )}
                   </div>
+
                   <ScoreRing score={item.score} size={44} />
                   <ChevronRight size={15} className="text-gray-500" />
                 </div>

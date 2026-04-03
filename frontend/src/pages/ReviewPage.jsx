@@ -334,7 +334,7 @@ export default function ReviewPage() {
       <div className="flex flex-1 overflow-hidden text-white relative">
 
         {/* ════════════ Editor Panel ════════════ */}
-        <div className="flex flex-col w-1/2 border-r border-white/5">
+        <div className="review-editor-chrome flex flex-col w-1/2 border-r border-white/5 min-h-0">
 
           {/* Toolbar */}
           <div className="flex items-center justify-between px-4 py-2 border-b border-white/5 bg-[#0c1018] flex-shrink-0">

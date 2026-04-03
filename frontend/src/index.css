@@ -125,6 +125,39 @@ html.theme-light body::before {
   opacity: 0.015;
 }
 
+/*
+  Editor panel chrome (toolbar + footer) stays on a dark surface (#0c1018).
+  Global light-theme rules remap text-gray-* to dark colors for light backgrounds,
+  which makes those utilities invisible here. Scoped “light text on dark chrome” fixes.
+*/
+html.theme-light .review-editor-chrome .text-gray-200 {
+  color: #f1f5f9 !important;
+}
+html.theme-light .review-editor-chrome .text-gray-300 {
+  color: #cbd5e1 !important;
+}
+html.theme-light .review-editor-chrome .text-gray-400 {
+  color: #94a3b8 !important;
+}
+html.theme-light .review-editor-chrome .text-gray-500 {
+  color: #94a3b8 !important;
+}
+html.theme-light .review-editor-chrome .text-gray-600 {
+  color: #94a3b8 !important;
+}
+html.theme-light .review-editor-chrome .text-slate-300 {
+  color: #cbd5e1 !important;
+}
+html.theme-light .review-editor-chrome .text-slate-400 {
+  color: #94a3b8 !important;
+}
+html.theme-light .review-editor-chrome input::placeholder {
+  color: rgba(148, 163, 184, 0.65) !important;
+}
+html.theme-light .review-editor-chrome label.cursor-pointer:hover {
+  color: #f8fafc !important;
+}
+
 html { scroll-behavior: smooth; }
 
 body {

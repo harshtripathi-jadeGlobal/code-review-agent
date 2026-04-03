@@ -46,19 +46,55 @@ export default function StatisticDashboard({ stats, loading, error }) {
     { name: 'Avg. Quality Score', value: stats.avg_score, fill: '#10b981' },
   ]
 
-  // 3. Clustered Bar Chart: Weekly Trends (Simulated based on totals for visual effect)
-  // Real apps would fetch this from a /stats/trends endpoint
+  // 3. Clustered Bar Chart: Weekly Trends
+  // Prefer real backend data from stats.weekly; fall back to a simulated shape if unavailable.
   const clusteredData = useMemo(() => {
+    const makeLabel = (dateStr) => {
+      const d = new Date(dateStr)
+      if (Number.isNaN(d.getTime())) return dateStr
+      return d.toLocaleDateString(undefined, { weekday: 'short' })
+    }
+
+    // Prefer real weekly data from backend
+    if (stats.weekly && Array.isArray(stats.weekly) && stats.weekly.length > 0) {
+      return stats.weekly.map((day) => ({
+        name: makeLabel(day.date),
+        Critical: day.critical ?? 0,
+        Warning: day.warning ?? 0,
+        Info: day.info ?? 0,
+      }))
+    }
+
+    // Fallback: synthetic distribution based on totals
     const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
-    const ratio = stats.total_issues > 0 ? (stats.critical_total / stats.total_issues) : 0
-    return days.map((day, i) => {
-      // Simulate bell-curveish distribution over the week holding the total
-      const base = Math.max(2, Math.floor(stats.total_issues / 7) + (Math.sin(i) * 5))
-      const crit = Math.max(0, Math.floor(base * ratio) + (i % 2 === 0 ? 1 : -1))
+    const total = stats.total_issues || 0
+    const critTotal = stats.critical_total || 0
+    const warnTotal = stats.warning_total ?? Math.round((total - critTotal) * 0.6)
+    const infoTotal = stats.info_total ?? Math.max(0, total - critTotal - warnTotal)
+
+    if (total <= 0) {
+      return days.map((name) => ({
+        name,
+        Critical: 0,
+        Warning: 0,
+        Info: 0,
+      }))
+    }
+
+    const critRatio = critTotal / total
+    const warnRatio = warnTotal / total
+    const infoRatio = infoTotal / total
+
+    return days.map((name, i) => {
+      const base = Math.max(2, Math.floor(total / 7) + Math.sin(i) * 5)
+      const critical = Math.max(0, Math.round(base * critRatio))
+      const warning = Math.max(0, Math.round(base * warnRatio))
+      const info = Math.max(0, Math.round(base * infoRatio))
       return {
-        name: day,
-        Critical: Math.max(0, crit),
-        WarningAndInfo: Math.max(0, Math.floor(base) - crit)
+        name,
+        Critical: critical,
+        Warning: warning,
+        Info: info,
       }
     })
   }, [stats])
@@ -195,7 +231,7 @@ export default function StatisticDashboard({ stats, loading, error }) {
               <XAxis dataKey="name" stroke="#6b7280" tick={{ fill: '#6b7280', fontSize: 13, fontWeight: 500 }} axisLine={false} tickLine={false} dy={10} />
               <YAxis stroke="#6b7280" tick={{ fill: '#6b7280', fontSize: 13 }} axisLine={false} tickLine={false} minTickGap={5} />
               <Tooltip cursor={{ fill: 'rgba(255,255,255,0.03)' }} content={<CustomTooltip />} />
-              <Legend 
+              <Legend
                 verticalAlign="top" 
                 height={40} 
                 iconType="circle"
@@ -203,7 +239,8 @@ export default function StatisticDashboard({ stats, loading, error }) {
                 formatter={(value) => <span className="text-gray-400 font-medium ml-1">{value}</span>}
               />
               <Bar dataKey="Critical" fill="#ef4444" radius={[4, 4, 0, 0]} maxBarSize={40} />
-              <Bar dataKey="WarningAndInfo" name="Warnings &amp; Info" fill="#3b82f6" radius={[4, 4, 0, 0]} maxBarSize={40} />
+              <Bar dataKey="Warning" name="Warnings" fill="#f59e0b" radius={[4, 4, 0, 0]} maxBarSize={40} />
+              <Bar dataKey="Info" name="Info" fill="#3b82f6" radius={[4, 4, 0, 0]} maxBarSize={40} />
             </BarChart>
           </ResponsiveContainer>
         </div>

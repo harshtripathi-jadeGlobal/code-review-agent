@@ -1,4 +1,4 @@
-# Codewatch — AI Code Review Agent
+# CodeSage — AI Code Review Agent
 
 A full-stack AI-powered code review tool. Paste or upload Python / JavaScript code and get instant analysis covering bugs, security vulnerabilities, performance issues, and style violations — with severity ratings and actionable fix suggestions.
 

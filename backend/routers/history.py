@@ -3,6 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, desc
 from models.database import get_db
 from models.models import Submission, Review, Issue
+from datetime import datetime, timedelta
 
 router = APIRouter()
 
@@ -83,18 +84,49 @@ async def get_stats(db: AsyncSession = Depends(get_db)):
     from sqlalchemy import func
     total_reviews = await db.scalar(select(func.count(Review.id)))
     total_issues  = await db.scalar(select(func.sum(Review.total_issues))) or 0
-    avg_score     = await db.scalar(select(func.avg(Review.score))) or 0
+    avg_score      = await db.scalar(select(func.avg(Review.score))) or 0
     critical_total = await db.scalar(select(func.sum(Review.critical_count))) or 0
+    warning_total  = await db.scalar(select(func.sum(Review.warning_count))) or 0
+    info_total     = await db.scalar(select(func.sum(Review.info_count))) or 0
 
+    # Breakdown by issue category (bug / security / performance / style)
     cat_result = await db.execute(
         select(Issue.category, func.count(Issue.id)).group_by(Issue.category)
     )
     categories = {row[0]: row[1] for row in cat_result.all()}
+
+    # Weekly breakdown: last 7 days of issues by severity.
+    # We rely on Review.created_at and the per-review severity counts.
+    seven_days_ago = datetime.utcnow() - timedelta(days=6)
+    weekly_result = await db.execute(
+        select(
+            func.date(Review.created_at),
+            func.sum(Review.critical_count),
+            func.sum(Review.warning_count),
+            func.sum(Review.info_count),
+        )
+        .where(Review.created_at >= seven_days_ago)
+        .group_by(func.date(Review.created_at))
+        .order_by(func.date(Review.created_at))
+    )
+
+    weekly = [
+        {
+            "date": date.isoformat() if hasattr(date, "isoformat") else str(date),
+            "critical": int(crit or 0),
+            "warning": int(warn or 0),
+            "info": int(info or 0),
+        }
+        for date, crit, warn, info in weekly_result.all()
+    ]
 
     return {
         "total_reviews": total_reviews or 0,
         "total_issues": int(total_issues),
         "avg_score": round(float(avg_score), 1),
         "critical_total": int(critical_total),
+        "warning_total": int(warning_total),
+        "info_total": int(info_total),
         "by_category": categories,
+        "weekly": weekly,
     }

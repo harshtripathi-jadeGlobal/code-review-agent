@@ -84,6 +84,9 @@ html.theme-light {
 html.theme-light .text-white {
   color: var(--text) !important;
 }
+html.theme-light .text-gray-300 {
+  color: rgba(7, 16, 31, 0.8) !important;
+}
 html.theme-light .text-gray-400 {
   color: rgba(7, 16, 31, 0.55) !important;
 }
@@ -110,6 +113,12 @@ html.theme-light .border-white\\/5 {
 }
 html.theme-light .border-white\\/10 {
   border-color: rgba(7, 16, 31, 0.14) !important;
+}
+html.theme-light .border-white\/8 {
+  border-color: rgba(7, 16, 31, 0.1) !important;
+}
+html.theme-light .border-white\/5 {
+  border-color: rgba(7, 16, 31, 0.08) !important;
 }
 
 html.theme-light body::before {

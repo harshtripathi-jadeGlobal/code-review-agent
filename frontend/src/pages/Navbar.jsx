@@ -90,10 +90,11 @@ export default function Navbar() {
                     }}
                 />
 
-                <div className="flex items-center px-6 h-[68px]">
+                {/* Navbar Content Constraint */}
+                <div className="flex items-center mx-auto max-w-[1400px] w-full px-6 sm:px-12 lg:px-16 h-[68px]">
 
                     {/* ── Logo ── */}
-                    <div className="flex-shrink-0 ml-8">
+                    <div className="flex-shrink-0">
                         <NavLink to="/" className="flex items-center gap-2.5 group w-fit">
                             <div className="relative">
                                 <div

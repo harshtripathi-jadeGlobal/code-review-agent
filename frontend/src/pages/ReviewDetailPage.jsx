@@ -44,10 +44,10 @@ export default function ReviewDetailPage() {
               <span className="font-mono text-sm font-medium text-white truncate">
                 {review.filename}
               </span>
-              <span className={`text-xs px-2 py-0.5 rounded-full font-medium flex-shrink-0 ${
+              <span className={`badge rounded-full px-3 py-0.5 text-[11px] flex-shrink-0 ${
                 review.language === 'python'
-                  ? 'bg-blue-900/50 text-blue-300'
-                  : 'bg-purple-900/50 text-purple-300'
+                  ? 'badge-style'
+                  : 'badge-security'
               }`}>
                 {review.language}
               </span>
@@ -67,7 +67,7 @@ export default function ReviewDetailPage() {
       </header>
 
       {/* Body */}
-      <div className="flex-1 overflow-y-auto px-8 py-5">
+      <div className="flex-1 overflow-y-auto overflow-x-hidden px-8 py-5">
 
         {/* Loading */}
         {loading && (

@@ -1,0 +1,22 @@
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Developer
+    participant UI as React Frontend
+    participant Route as FastAPI Route
+    participant DB as MySQL Database
+    participant LLM as External AI API
+    
+    Developer->>UI: Input Code (Paste or Drag & Drop)
+    UI->>Route: POST /api/review
+    Route->>Route: Detect missing language (Heuristics)
+    Note over Route,DB: Save Raw Submission
+    Route->>DB: INSERT INTO submissions
+    Route->>LLM: Payload prompt + Code context
+    LLM-->>Route: Strict JSON string (Issues, Score, Summary)
+    Route->>Route: Clean & parse JSON (Parse_llm_response)
+    Note over Route,DB: Save Structured Review
+    Route->>DB: INSERT INTO reviews & issues
+    Route-->>UI: 200 OK (Processed Output JSON)
+    UI-->>Developer: Render ScoreRing, Diffs & IssueCards
+```

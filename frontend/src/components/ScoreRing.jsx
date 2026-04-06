@@ -1,6 +1,4 @@
 import React from 'react'
-import styles from './ScoreRing.module.css'
-
 export default function ScoreRing({ score = 0, size = 64 }) {
   const radius = (size - 8) / 2
   const circumference = 2 * Math.PI * radius
@@ -12,7 +10,7 @@ export default function ScoreRing({ score = 0, size = 64 }) {
     'var(--critical)'
 
   return (
-    <div className={styles.ring} style={{ width: size, height: size }}>
+    <div className="relative flex items-center justify-center shrink-0" style={{ width: size, height: size }}>
       <svg width={size} height={size}>
         <circle
           cx={size / 2}
@@ -36,8 +34,8 @@ export default function ScoreRing({ score = 0, size = 64 }) {
           style={{ transition: 'stroke-dashoffset 0.8s cubic-bezier(0.16,1,0.3,1)' }}
         />
       </svg>
-      <div className={styles.label} style={{ color }}>
-        <span className={styles.score}>{Math.round(score)}</span>
+      <div className="absolute inset-0 flex items-center justify-center" style={{ color }}>
+        <span className="font-display text-[14px] font-bold leading-none">{Math.round(score)}</span>
       </div>
     </div>
   )

@@ -32,144 +32,184 @@ function formatTime(iso) {
 }
 
 export default function HistoryPage({ stats, history, loading, error }) {
-  
 
- 
+
+
   const navigate = useNavigate()
 
-
-
   return (
-    <div className="min-h-screen bg-gray-950 text-white px-6 py-8">
+    <div className="h-full w-full bg-gray-950 overflow-y-auto overflow-x-hidden text-white flex flex-col">
+      <div 
+        className="mx-auto max-w-[1400px] w-full py-10 md:py-16 flex flex-col gap-10"
+        style={{ paddingLeft: '2.5rem', paddingRight: '2.5rem' }}
+      >
 
-      {/* Header */}
-      <header className="mb-8">
-        <h1 className="text-2xl font-bold text-white">Review History</h1>
-        <p className="text-gray-400 text-sm mt-1">All past code submissions and their results</p>
-      </header>
-
-      {/* Stats Row */}
-      {stats && (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
-          <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 flex items-center gap-3">
-            <div className="text-blue-400"><BarChart3 size={16} /></div>
-            <div>
-              <div className="text-xl font-bold">{stats.total_reviews}</div>
-              <div className="text-xs text-gray-400">Reviews</div>
-            </div>
-          </div>
-          <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 flex items-center gap-3">
-            <div className="text-yellow-400"><AlertTriangle size={16} /></div>
-            <div>
-              <div className="text-xl font-bold">{stats.total_issues}</div>
-              <div className="text-xs text-gray-400">Issues Found</div>
-            </div>
-          </div>
-          <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 flex items-center gap-3">
-            <div className="text-green-400"><TrendingUp size={16} /></div>
-            <div>
-              <div className="text-xl font-bold">{stats.avg_score}</div>
-              <div className="text-xs text-gray-400">Avg Score</div>
-            </div>
-          </div>
-          <div className="bg-gray-900 border border-gray-800 rounded-xl p-4 flex items-center gap-3">
-            <div className="text-red-400"><Shield size={16} /></div>
-            <div>
-              <div className="text-xl font-bold">{stats.critical_total}</div>
-              <div className="text-xs text-gray-400">Critical Issues</div>
-            </div>
-          </div>
+        {/* Header Block */}
+        <div className="flex flex-col gap-2 w-full">
+          <h1 className="text-3xl font-extrabold text-white tracking-tight">Review History</h1>
+          <p className="text-gray-400 text-sm font-medium">All past code submissions and intelligent analysis results.</p>
         </div>
-      )}
 
-      {/* Body */}
-      <div>
-        {/* Loading */}
-        {loading && (
-          <div className="flex flex-col items-center justify-center gap-3 py-20 text-gray-400">
-            <div className="w-8 h-8 border-2 border-gray-600 border-t-blue-500 rounded-full animate-spin" />
-            <span className="text-sm">Loading history…</span>
-          </div>
-        )}
-
-        {/* Error */}
-        {error && (
-          <div className="bg-red-900/30 border border-red-700 text-red-300 rounded-xl px-5 py-4 text-sm">
-            {error}
-          </div>
-        )}
-
-        {/* Empty State */}
-        {!loading && !error && history.length === 0 && (
-          <div className="flex flex-col items-center justify-center gap-3 py-20 text-gray-500">
-            <Clock size={28} />
-            <h3 className="text-white font-semibold text-lg">No reviews yet</h3>
-            <p className="text-sm">Run your first code review to see results here.</p>
-          </div>
-        )}
-
-        {/* History List */}
-        {!loading && history.length > 0 && (
-          <div className="flex flex-col gap-3">
-            {history.map((item, i) => (
-              <button
-                key={item.review_id}
-                onClick={() => navigate(`/history/${item.review_id}`)}
-                style={{ animationDelay: `${i * 0.04}s` }}
-                className="w-full bg-gray-900 hover:bg-gray-800 border border-gray-800 hover:border-gray-600 rounded-xl px-5 py-4 flex items-center justify-between transition-all duration-200 text-left"
+        {/* Stats Row Container */}
+        {stats && (
+          <div className="w-full">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6 w-full">
+              
+              <div 
+                className="flex flex-col justify-center items-start gap-4 bg-gray-900 border border-gray-800 rounded-2xl shadow-sm transition-all hover:border-gray-700"
+                style={{ padding: '1.75rem' }}
               >
-                {/* Left */}
-                <div className="flex items-center gap-3">
-                  <div className="bg-gray-800 p-2 rounded-lg text-gray-400">
-                    <FileCode size={15} />
-                  </div>
-                  <div>
-                    <div className="text-sm font-semibold text-white">{item.filename}</div>
-                    <div className="flex items-center gap-2 mt-1">
-                      <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                        item.language === 'python'
-                          ? 'bg-blue-900/50 text-blue-300'
-                          : 'bg-purple-900/50 text-purple-300'
-                      }`}>
-                        {item.language}
-                      </span>
+                <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 text-lg shadow-inner shrink-0">
+                  <BarChart3 size={20} />
+                </div>
+                <div className="flex flex-col mt-2">
+                  <span className="text-3xl font-black text-white leading-none tracking-tight">{stats.total_reviews}</span>
+                  <span className="text-[11px] text-gray-400 font-bold uppercase tracking-widest mt-2">{stats.total_reviews === 1 ? 'Review' : 'Total Reviews'}</span>
+                </div>
+              </div>
 
-                      {/* ✅ FIXED TIME */}
-                      <span className="flex items-center gap-1 text-xs text-gray-500">
-                        <Clock size={11} />
-                        {formatTime(item.created_at)}
-                      </span>
+              <div 
+                className="flex flex-col justify-center items-start gap-4 bg-gray-900 border border-gray-800 rounded-2xl shadow-sm transition-all hover:border-gray-700"
+                style={{ padding: '1.75rem' }}
+              >
+                <div className="w-10 h-10 rounded-xl bg-yellow-500/10 border border-yellow-500/20 flex items-center justify-center text-yellow-400 shadow-inner shrink-0">
+                  <AlertTriangle size={20} />
+                </div>
+                <div className="flex flex-col mt-2">
+                  <span className="text-3xl font-black text-white leading-none tracking-tight">{stats.total_issues}</span>
+                  <span className="text-[11px] text-gray-400 font-bold uppercase tracking-widest mt-2">Issues Found</span>
+                </div>
+              </div>
+
+              <div 
+                className="flex flex-col justify-center items-start gap-4 bg-gray-900 border border-gray-800 rounded-2xl shadow-sm transition-all hover:border-gray-700"
+                style={{ padding: '1.75rem' }}
+              >
+                <div className="w-10 h-10 rounded-xl bg-green-500/10 border border-green-500/20 flex items-center justify-center text-green-400 shadow-inner shrink-0">
+                  <TrendingUp size={20} />
+                </div>
+                <div className="flex flex-col mt-2">
+                  <span className="text-3xl font-black text-white leading-none tracking-tight">{stats.avg_score}</span>
+                  <span className="text-[11px] text-gray-400 font-bold uppercase tracking-widest mt-2">Avg Score</span>
+                </div>
+              </div>
+
+              <div 
+                className="flex flex-col justify-center items-start gap-4 bg-gray-900 border border-gray-800 rounded-2xl shadow-sm transition-all hover:border-gray-700"
+                style={{ padding: '1.75rem' }}
+              >
+                <div className="w-10 h-10 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-400 shadow-inner shrink-0">
+                  <Shield size={20} />
+                </div>
+                <div className="flex flex-col mt-2">
+                  <span className="text-3xl font-black text-white leading-none tracking-tight">{stats.critical_total}</span>
+                  <span className="text-[11px] text-gray-400 font-bold uppercase tracking-widest mt-2">{stats.critical_total === 1 ? 'Critical Flaw' : 'Critical Flaws'}</span>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        )}
+
+        <div className="w-full h-px bg-white/5 rounded-full" />
+
+        {/* Content Block */}
+        <div className="w-full flex-1">
+          {/* Loading */}
+          {loading && (
+            <div className="flex flex-col items-center justify-center gap-4 py-24 text-gray-400 w-full bg-gray-900/40 rounded-3xl border border-dashed border-gray-800">
+              <div className="w-8 h-8 border-2 border-gray-600 border-t-blue-500 rounded-full animate-spin" />
+              <span className="text-sm font-medium tracking-wide">Loading history…</span>
+            </div>
+          )}
+
+          {/* Error */}
+          {error && (
+            <div className="w-full bg-red-500/10 border border-red-500/20 text-red-300 rounded-2xl p-6 text-sm flex items-center gap-3">
+              <AlertTriangle size={18} />
+              <span className="font-medium">{error}</span>
+            </div>
+          )}
+
+          {/* Empty State */}
+          {!loading && !error && history.length === 0 && (
+            <div className="flex flex-col items-center justify-center gap-4 py-24 text-gray-500 w-full bg-gray-900/40 rounded-3xl border border-dashed border-gray-800">
+              <div className="w-16 h-16 rounded-full bg-gray-900 flex items-center justify-center border border-gray-800 shadow-inner">
+                 <Clock size={24} className="text-gray-400" />
+              </div>
+              <div className="text-center">
+                <h3 className="text-white font-semibold text-lg">No reviews yet</h3>
+                <p className="text-sm mt-1 text-gray-500">Run your first code review to see results here.</p>
+              </div>
+            </div>
+          )}
+
+          {/* History List */}
+          {!loading && history.length > 0 && (
+            <div className="flex flex-col gap-5 w-full pb-10">
+              {history.map((item, i) => (
+                <button
+                  key={item.review_id}
+                  onClick={() => navigate(`/history/${item.review_id}`)}
+                  style={{ animationDelay: `${i * 0.04}s` }}
+                  className="group w-full bg-gray-900 hover:bg-gray-800 border border-gray-800 hover:border-gray-700/80 rounded-2xl shadow-sm hover:shadow-md hover:-translate-y-0.5 p-5 md:px-6 md:py-5 flex flex-col md:flex-row items-start md:items-center gap-5 justify-between transition-all duration-200 text-left cursor-pointer"
+                >
+                  {/* Left */}
+                  <div className="flex items-center gap-4">
+                    <div className="bg-gray-950 p-3 rounded-xl border border-gray-800 text-gray-400 shadow-inner group-hover:text-blue-400 group-hover:border-blue-500/30 transition-colors">
+                      <FileCode size={18} />
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <div className="text-base font-bold text-white tracking-wide">{item.filename}</div>
+                      <div className="flex items-center gap-2">
+                        <span className={`badge rounded-md px-2.5 py-0.5 text-[10px] uppercase font-bold tracking-widest ${
+                          item.language === 'python' ? 'badge-style' : 'badge-security'
+                        }`}>
+                          {item.language}
+                        </span>
+
+                        <div className="w-1 h-1 rounded-full bg-gray-700" />
+
+                        <span className="flex items-center gap-1.5 text-xs text-gray-500 font-medium">
+                          <Clock size={12} />
+                          {formatTime(item.created_at)}
+                        </span>
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                {/* Right */}
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center gap-2">
-                    {item.critical_count > 0 && (
-                      <span className="text-xs px-2 py-0.5 rounded-full bg-red-900/50 text-red-300 font-medium">
-                        {item.critical_count} critical
-                      </span>
-                    )}
-                    {item.warning_count > 0 && (
-                      <span className="text-xs px-2 py-0.5 rounded-full bg-yellow-900/50 text-yellow-300 font-medium">
-                        {item.warning_count} warning
-                      </span>
-                    )}
-                    {item.info_count > 0 && (
-                      <span className="text-xs px-2 py-0.5 rounded-full bg-blue-900/50 text-blue-300 font-medium">
-                        {item.info_count} info
-                      </span>
-                    )}
+                  {/* Right */}
+                  <div className="flex items-center gap-6 w-full md:w-auto justify-between md:justify-end mt-2 md:mt-0 pt-3 md:pt-0 border-t md:border-none border-gray-800">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      {item.critical_count > 0 && (
+                        <span className="badge badge-critical rounded-md px-2.5 py-1 text-[10px] font-bold">
+                          {item.critical_count} CRITICAL
+                        </span>
+                      )}
+                      {item.warning_count > 0 && (
+                        <span className="badge badge-warning rounded-md px-2.5 py-1 text-[10px] font-bold">
+                          {item.warning_count} WARNING
+                        </span>
+                      )}
+                      {item.info_count > 0 && (
+                        <span className="badge badge-info rounded-md px-2.5 py-1 text-[10px] font-bold">
+                          {item.info_count} INFO
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="flex items-center gap-4 pl-2 md:border-l border-gray-800 md:pl-6">
+                      <ScoreRing score={item.score} size={42} />
+                      <div className="w-8 h-8 rounded-full bg-transparent flex items-center justify-center group-hover:bg-blue-500/10 group-hover:text-blue-400 transition-colors">
+                        <ChevronRight size={18} className="text-gray-500 group-hover:text-blue-400 transition-colors" />
+                      </div>
+                    </div>
                   </div>
-
-                  <ScoreRing score={item.score} size={44} />
-                  <ChevronRight size={15} className="text-gray-500" />
-                </div>
-              </button>
-            ))}
-          </div>
-        )}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )

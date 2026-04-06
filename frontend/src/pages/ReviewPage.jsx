@@ -313,7 +313,7 @@ export default function ReviewPage() {
 
   return (
     <div
-      className="flex flex-col h-screen overflow-hidden"
+      className="flex flex-col h-full overflow-hidden"
 
     >
 
@@ -331,10 +331,10 @@ export default function ReviewPage() {
       </header>
 
       {/* ── Workspace ── */}
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1 overflow-hidden text-white relative">
 
         {/* ════════════ Editor Panel ════════════ */}
-        <div className="flex flex-col w-1/2 border-r border-white/5">
+        <div className="review-editor-chrome flex flex-col w-1/2 border-r border-white/5 min-h-0">
 
           {/* Toolbar */}
           <div className="flex items-center justify-between px-4 py-2 border-b border-white/5 bg-[#0c1018] flex-shrink-0">
@@ -444,7 +444,7 @@ export default function ReviewPage() {
         </div>
 
         {/* ════════════ Results Panel ════════════ */}
-        <div className="flex flex-col flex-1  w-full overflow-y-auto bg-[#080b10]">
+        <div style={{ display: 'flex', flexDirection: 'column', flex: 1, width: '100%', overflow: 'hidden', background: '#080b10', minHeight: 0 }}>
 
           {error && (
             <div className="mx-6 mt-6 flex items-start gap-3 px-4 py-3.5 rounded-xl bg-red-500/10 border border-red-500/20 text-red-300 text-sm">
@@ -516,7 +516,7 @@ export default function ReviewPage() {
           )}
 
           {result && (
-            <div className="p-8">
+            <div style={{ flex: 1, overflow: 'hidden', minHeight: 0 }}>
               <ReviewResults result={result} />
             </div>
           )}

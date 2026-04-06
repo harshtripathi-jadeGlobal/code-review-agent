@@ -9,6 +9,12 @@ load_dotenv()
 # Get DATABASE_URL from .env
 DATABASE_URL = os.getenv("DATABASE_URL")
 
+# Fallback for local/dev when MySQL isn't configured.
+# Keeps the app runnable out of the box (demo mode still works),
+# while still allowing MySQL via DATABASE_URL.
+if not DATABASE_URL:
+    DATABASE_URL = "sqlite+aiosqlite:///./codesage.db"
+
 # Create async engine
 engine = create_async_engine(
     DATABASE_URL,

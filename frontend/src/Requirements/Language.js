@@ -33,19 +33,17 @@ export const LANGUAGE_PROFILES = [
     extension: '.js',
     editorLang: 'javascript',
     badgeClass: 'bg-yellow-900/50 text-yellow-300',
-   signals: [
-  /^\s*(const|let|var)\s+\w+\s*=/m,
-  /=>/,
-  /^\s*function\s+\w+\s*\(/m,
-  /console\.(log|error|warn)\s*\(/,
-  /===|!==/,
-  /document\.|window\.|querySelector/,
-  /\.then\s*\(|\.catch\s*\(/,
-  /require\s*\(\s*['"]/,
-  /\bundefined\b|\bnull\b/,
-  /for\s*\(|while\s*\(/,        // ✅ NEW
-  /if\s*\(/,                   // ✅ NEW
-],
+    signals: [
+      /^\s*(const|let|var)\s+\w+\s*=/m,
+      /=>/,
+      /^\s*function\s+\w+\s*\(/m,
+      /console\.(log|error|warn)\s*\(/,
+      /===|!==/,
+      /document\.|window\.|querySelector/,
+      /\.then\s*\(|\.catch\s*\(/,
+      /require\s*\(\s*['"]/,
+      /\bundefined\b|\bnull\b/,
+    ],
   },
   {
     name: 'typescript',
@@ -134,14 +132,15 @@ export const LANGUAGE_PROFILES = [
     editorLang: 'cpp',
     badgeClass: 'bg-indigo-900/50 text-indigo-300',
     signals: [
-      /^\s*#include\s*<(iostream|vector|string|map)/m, // C++ headers
-      /std::(cout|cin|endl|vector|string|map)/,        // std::
-      /^\s*using\s+namespace\s+std/m,     // using namespace std
-      /class\s+\w+\s*{/,                  // class Foo {
+      /^\s*#include\s*[<"]/m,             // C++ headers
+      /std::\w+/,                         // std::
+      /^\s*using\s+namespace\s+\w+/m,     // using namespace std
+      /class\s+\w+\s*({|:)/,              // class Foo {
       /cout\s*<<|cin\s*>>/,               // stream operators
       /\bnew\b.*\bdelete\b|\bdelete\b/,   // new/delete
       /template\s*<\s*(typename|class)/,  // templates
-      /::\w+/,                             // scope resolution
+      /::\w+/,                            // scope resolution
+      /(vector|map|set|stack|queue|unordered_map)<\w+/, // C++ generic containers
     ],
   },
   {

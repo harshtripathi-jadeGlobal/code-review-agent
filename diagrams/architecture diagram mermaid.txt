@@ -1,0 +1,32 @@
+```mermaid
+graph TD
+    subgraph Client [Client-Side (React)]
+        UI[User Interface]
+        Pages[React Router Pages]
+        Components[Code Editor & Cards]
+    end
+
+    subgraph Server [Backend System (FastAPI)]
+        API[FastAPI Entrypoint]
+        Router[Routing & Validation]
+        LLM_SVC[AI Review Service]
+        ORM[SQLAlchemy Async]
+    end
+
+    subgraph Data [Data Persistence]
+        DB[(MySQL 8 Database)]
+    end
+
+    subgraph External [External Services]
+        Groq[Groq API / Llama3]
+        OpenAI[OpenAI API / GPT-4o]
+    end
+
+    UI -->|JSON over REST| API
+    API --> Router
+    Router --> LLM_SVC
+    Router --> ORM
+    ORM -->|aiomysql / TCP| DB
+    LLM_SVC -->|HTTPS| Groq
+    LLM_SVC -->|HTTPS| OpenAI
+```

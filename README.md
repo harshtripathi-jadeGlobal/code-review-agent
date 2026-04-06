@@ -1,4 +1,4 @@
-# Codewatch — AI Code Review Agent
+# CodeSage — AI Code Review Agent
 
 A full-stack AI-powered code review tool. Paste or upload Python / JavaScript code and get instant analysis covering bugs, security vulnerabilities, performance issues, and style violations — with severity ratings and actionable fix suggestions.
 
@@ -25,6 +25,8 @@ code-review-agent/
 │   ├── main.py                  # FastAPI app entry point
 │   ├── requirements.txt
 │   ├── .env.example
+│   ├── create_db.py             # Script to initialize database
+│   ├── codesage.db             # Local SQLite fallback database
 │   ├── models/
 │   │   ├── models.py            # SQLAlchemy ORM models
 │   │   └── database.py          # Async DB engine & session
@@ -41,16 +43,22 @@ code-review-agent/
 │       ├── main.jsx
 │       ├── App.jsx
 │       ├── index.css            # Global design tokens
+│       ├── Requirements/
+│       │   └── Language.js      # Highlight.js definitions mapping
 │       ├── components/
-│       │   ├── Layout.jsx       # Sidebar navigation
 │       │   ├── CodeEditor.jsx   # Syntax-highlighted editor
-│       │   ├── ReviewResults.jsx
 │       │   ├── IssueCard.jsx    # Expandable issue cards
+│       │   ├── ReviewResults.jsx # Component rendering parsed issues
 │       │   └── ScoreRing.jsx    # Animated SVG score ring
-│       └── pages/
-│           ├── ReviewPage.jsx   # Main review workspace
-│           ├── HistoryPage.jsx  # Past reviews + stats
-│           └── ReviewDetailPage.jsx
+│       ├── pages/
+│       │   ├── AboutPage.jsx    # Project info & team details
+│       │   ├── Navbar.jsx       # Application navigation header
+│       │   ├── ReviewPage.jsx   # Main review workspace
+│       │   ├── HistoryPage.jsx  # Past reviews list view
+│       │   ├── StatisticDashboard.jsx # Analytics and stats dashboard
+│       │   └── ReviewDetailPage.jsx # Individual review detailed view
+│       └── utils/
+│           └── exportPdf.js     # Code logic to export reviews to PDF
 └── schema.sql                   # MySQL schema
 ```
 
@@ -68,8 +76,8 @@ mysql -u root -p < schema.sql
 
 ```bash
 cd backend
-python -m venv venv
-source venv/bin/activate        # Windows: venv\Scripts\activate
+python -m venv .venv
+source .venv/bin/activate        # Windows: .\.venv\Scripts\activate
 pip install -r requirements.txt
 
 # Copy and fill in your env

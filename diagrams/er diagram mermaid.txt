@@ -1,0 +1,35 @@
+```mermaid
+erDiagram
+    SUBMISSIONS ||--o{ REVIEWS : "generates"
+    REVIEWS ||--o{ ISSUES : "contains"
+    
+    SUBMISSIONS {
+        int id PK
+        string filename
+        string language
+        longtext code
+        datetime created_at
+    }
+    REVIEWS {
+        int id PK
+        int submission_id FK
+        int total_issues
+        int critical_count
+        int warning_count
+        int info_count
+        float score
+        datetime created_at
+    }
+    ISSUES {
+        int id PK
+        int review_id FK
+        enum category "bug, security, performance, style"
+        enum severity "critical, warning, info"
+        int line_number
+        string title
+        text description
+        text fix_suggestion
+        text code_before
+        text code_after
+    }
+```

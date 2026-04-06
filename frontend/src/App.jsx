@@ -5,6 +5,7 @@ import ReviewPage from './pages/ReviewPage'
 import HistoryPage from './pages/HistoryPage'
 import ReviewDetailPage from './pages/ReviewDetailPage'
 import StatsDashboard from './pages/StatisticDashboard'
+import AboutPage from './pages/AboutPage'
 import axios from 'axios'
 
 export default function App() {
@@ -34,13 +35,15 @@ export default function App() {
   }, [])
 
   return (
-    <div className="min-h-screen overflow-hidden" >
+    <div className="flex flex-col h-screen overflow-hidden bg-[#0d1017]">
 
       {/* ✅ TOP NAVBAR */}
-      <Navbar />
+      <div className="flex-shrink-0">
+        <Navbar />
+      </div>
 
       {/* ✅ PAGE CONTENT */}
-      <div className="px-6 py-6">
+      <div className="flex-1 overflow-hidden">
         <Routes>
 
           {/* Home */}
@@ -73,7 +76,7 @@ export default function App() {
               />
             }
           />
-          <Route path="/about" element={<div>About Page</div>} />
+          <Route path="/about" element={<AboutPage />} />
 
         </Routes>
       </div>

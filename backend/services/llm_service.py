@@ -6,6 +6,13 @@ import os
 GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
 
+# Internal LLM Environment Config
+LLM_PROVIDER = os.getenv("LLM_PROVIDER", "").lower()
+LLAMA_BASE_URL = os.getenv("LLAMA_BASE_URL")
+LLAMA_MODEL = os.getenv("LLAMA_MODEL")
+raw_ssl = os.getenv("LLAMA_VERIFY_SSL", "true")
+LLAMA_VERIFY_SSL = raw_ssl.lower() in ("true", "yes", "1", "t") if raw_ssl else True
+
 REVIEW_PROMPT = """You are a senior software engineer performing a thorough code review.
 Analyze the following {language} code and return ONLY a valid JSON object (no markdown, no explanation).
 
@@ -34,6 +41,34 @@ Code to review:
 
 Return only the JSON object. No markdown fences. No extra text."""
 
+async def call_internal_llama(code: str, language: str) -> dict:
+    prompt = REVIEW_PROMPT.format(language=language, code=code)
+    
+    # Using /generate payload format
+    base_url = LLAMA_BASE_URL if LLAMA_BASE_URL else ""
+    endpoint = f"{base_url.rstrip('/')}/generate"
+    
+    async with httpx.AsyncClient(timeout=120, verify=LLAMA_VERIFY_SSL) as client:
+        resp = await client.post(
+            endpoint,
+            json={
+                "model": LLAMA_MODEL,
+                "prompt": prompt,
+                "stream": False,
+                "options": {
+                    "temperature": 0.1
+                }
+            },
+        )
+        print("INTERNAL LLM STATUS:", resp.status_code)
+        resp.raise_for_status()
+        
+        data = resp.json()
+        
+        content = data.get("response") or data.get("generated_text") or data.get("text") or str(data)
+        return parse_llm_response(content)
+
+
 async def call_groq(code: str, language: str) -> dict:
     prompt = REVIEW_PROMPT.format(language=language, code=code)
     
@@ -45,42 +80,17 @@ async def call_groq(code: str, language: str) -> dict:
                 "Content-Type": "application/json"
             },
             json={
-                "model": "llama-3.3-70b-versatile",  # ✅ current supported model
+                "model": "llama-3.3-70b-versatile",  # current supported model
                 "messages": [{"role": "user", "content": prompt}],
                 "temperature": 0.1,
                 "max_tokens": 3000,
             },
         )
 
-        # print("STATUS:", resp.status_code)
-        print("RESPONSE:", resp.text)
-
-        resp.raise_for_status()
-
-        content = resp.json()["choices"][0]["message"]["content"]
-        return parse_llm_response(content)
-    prompt = REVIEW_PROMPT.format(language=language, code=code)
-    print("STATUS:", resp.status_code)
-    
-    async with httpx.AsyncClient(timeout=60) as client:
-        resp = await client.post(
-            "https://api.groq.com/openai/v1/chat/completions",
-            headers={"Authorization": f"Bearer {GROQ_API_KEY}"},
-            json={
-                "model": "llama3-70b-8192",
-                "messages": [{"role": "user", "content": prompt}],
-                "temperature": 0.1,
-                "max_tokens": 3000,
-            },
-          
-            
-           
-        )
-        print("RESPONSE:", resp.text)  
         resp.raise_for_status()
         content = resp.json()["choices"][0]["message"]["content"]
         return parse_llm_response(content)
- 
+
 
 async def call_openai(code: str, language: str) -> dict:
     prompt = REVIEW_PROMPT.format(language=language, code=code)
@@ -131,13 +141,16 @@ def detect_language(filename: str, code: str) -> str:
 
 
 async def run_review(code: str, language: str) -> dict:
-    if GROQ_API_KEY:
+    if LLM_PROVIDER:
+        return await call_internal_llama(code, language)
+    elif GROQ_API_KEY:
         return await call_groq(code, language)
     elif OPENAI_API_KEY:
         return await call_openai(code, language)
     else:
         # Demo mode - return sample issues
         return demo_review(code, language)
+
 
 # demo review for testing
 def demo_review(code: str, language: str) -> dict:

@@ -96,20 +96,12 @@ export default function Navbar() {
                     {/* ── Logo ── */}
                     <div className="flex-shrink-0">
                         <NavLink to="/" className="flex items-center gap-2.5 group w-fit">
-                            <div className="relative">
+                            <div className="relative flex items-center justify-center">
                                 <div
-                                    className="absolute -inset-1.5 rounded-xl blur-lg opacity-40 group-hover:opacity-70 transition-opacity duration-300"
-                                    style={{ background: 'radial-gradient(circle, rgba(59,130,246,0.5), transparent)' }}
+                                    className="absolute -inset-1.5 rounded-full blur-md opacity-30 group-hover:opacity-60 transition-opacity duration-300"
+                                    style={{ background: 'radial-gradient(circle, rgba(45,212,191,0.6), transparent)' }}
                                 />
-                                <div
-                                    className="relative w-8 h-8 rounded-lg flex items-center justify-center"
-                                    style={{
-                                        background: 'linear-gradient(145deg, #1d4ed8, #1e40af)',
-                                        boxShadow: '0 0 0 1px rgba(59,130,246,0.4), inset 0 1px 0 rgba(255,255,255,0.2)',
-                                    }}
-                                >
-                                    <Zap size={18} fill="white" className="text-white" />
-                                </div>
+                                <img src="/logo.png" alt="Logo" className="relative w-9 h-9 object-contain drop-shadow-md" />
                             </div>
                             <div className="leading-none ml-5">
                                 <div

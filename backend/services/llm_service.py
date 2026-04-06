@@ -139,7 +139,7 @@ async def run_review(code: str, language: str) -> dict:
         # Demo mode - return sample issues
         return demo_review(code, language)
 
-
+# demo review for testing
 def demo_review(code: str, language: str) -> dict:
     return {
         "score": 62,

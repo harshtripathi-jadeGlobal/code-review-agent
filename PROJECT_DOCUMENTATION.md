@@ -101,4 +101,3 @@ Returns aggregated data used for dashboards (average score, total issues handled
 
 ---
 
-*Documentation compiled by Antigravity Assistant.*

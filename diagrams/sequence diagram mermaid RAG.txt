@@ -1,0 +1,44 @@
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Developer
+    participant UI as React Frontend
+    participant Route as FastAPI Route
+    participant RAG as RAG Service
+    participant VDB as Chroma Vector DB
+    participant DB as MySQL Database
+    participant LLM as External/Internal AI
+    
+    %% Repository Ingestion Flow
+    Developer->>UI: Provide Repository Path
+    UI->>Route: POST /api/repo/ingest
+    Route->>RAG: ingest_repository(path)
+    RAG->>RAG: Read documents & chunk text
+    RAG->>VDB: Generate embeddings & upsert
+    VDB-->>RAG: Acknowledge storage
+    RAG-->>Route: Ingestion manifest/success
+    Route-->>UI: 200 OK (Ingested)
+
+    %% Evaluation Flow with Context
+    Developer->>UI: Input Code (Paste or Drop)
+    UI->>Route: POST /api/review
+    Route->>Route: Detect missing language
+    Note over Route,DB: Save Raw Submission
+    Route->>DB: INSERT INTO submissions
+    
+    %% RAG Retrieval
+    Route->>RAG: retrieve_context(code)
+    RAG->>VDB: similarity_search(code embeddings)
+    VDB-->>RAG: K nearest code snippets
+    RAG-->>Route: RAG Context String
+    
+    %% LLM Execution
+    Route->>LLM: Enhanced Prompt (Code + RAG Context)
+    LLM-->>Route: Strict JSON string (Issues, Score, Summary)
+    Route->>Route: Clean & parse JSON
+    
+    Note over Route,DB: Save Structured Review
+    Route->>DB: INSERT INTO reviews & issues
+    Route-->>UI: 200 OK (Processed Output JSON)
+    UI-->>Developer: Render ScoreRing, Diffs & IssueCards
+```

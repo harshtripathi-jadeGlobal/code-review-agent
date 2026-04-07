@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from routers import review, history
+from routers import review, history, repo
 from models.database import init_db
 from contextlib import asynccontextmanager
 
@@ -28,6 +28,7 @@ app.add_middleware(
 
 app.include_router(review.router, prefix="/api")
 app.include_router(history.router, prefix="/api")
+app.include_router(repo.router, prefix="/api/repo")
 
 @app.get("/")
 def root():

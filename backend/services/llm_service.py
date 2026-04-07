@@ -2,6 +2,7 @@ import httpx
 import json
 import re
 import os
+from services.rag_service import retrieve_context
 
 GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
@@ -15,6 +16,8 @@ LLAMA_VERIFY_SSL = raw_ssl.lower() in ("true", "yes", "1", "t") if raw_ssl else 
 
 REVIEW_PROMPT = """You are a senior software engineer performing a thorough code review.
 Analyze the following {language} code and return ONLY a valid JSON object (no markdown, no explanation).
+
+{rag_context}
 
 The JSON must follow this exact structure:
 {{
@@ -41,8 +44,8 @@ Code to review:
 
 Return only the JSON object. No markdown fences. No extra text."""
 
-async def call_internal_llama(code: str, language: str) -> dict:
-    prompt = REVIEW_PROMPT.format(language=language, code=code)
+async def call_internal_llama(code: str, language: str, rag_context: str = "") -> dict:
+    prompt = REVIEW_PROMPT.format(language=language, code=code, rag_context=rag_context)
     
     # Using /generate payload format
     base_url = LLAMA_BASE_URL if LLAMA_BASE_URL else ""
@@ -69,8 +72,8 @@ async def call_internal_llama(code: str, language: str) -> dict:
         return parse_llm_response(content)
 
 
-async def call_groq(code: str, language: str) -> dict:
-    prompt = REVIEW_PROMPT.format(language=language, code=code)
+async def call_groq(code: str, language: str, rag_context: str = "") -> dict:
+    prompt = REVIEW_PROMPT.format(language=language, code=code, rag_context=rag_context)
     
     async with httpx.AsyncClient(timeout=60) as client:
         resp = await client.post(
@@ -92,8 +95,8 @@ async def call_groq(code: str, language: str) -> dict:
         return parse_llm_response(content)
 
 
-async def call_openai(code: str, language: str) -> dict:
-    prompt = REVIEW_PROMPT.format(language=language, code=code)
+async def call_openai(code: str, language: str, rag_context: str = "") -> dict:
+    prompt = REVIEW_PROMPT.format(language=language, code=code, rag_context=rag_context)
     async with httpx.AsyncClient(timeout=60) as client:
         resp = await client.post(
             "https://api.openai.com/v1/chat/completions",
@@ -141,12 +144,15 @@ def detect_language(filename: str, code: str) -> str:
 
 
 async def run_review(code: str, language: str) -> dict:
+    # Retrieve RAG context if the user has ingested a repository
+    rag_context = retrieve_context(code)
+    
     if LLM_PROVIDER:
-        return await call_internal_llama(code, language)
+        return await call_internal_llama(code, language, rag_context)
     elif GROQ_API_KEY:
-        return await call_groq(code, language)
+        return await call_groq(code, language, rag_context)
     elif OPENAI_API_KEY:
-        return await call_openai(code, language)
+        return await call_openai(code, language, rag_context)
     else:
         # Demo mode - return sample issues
         return demo_review(code, language)

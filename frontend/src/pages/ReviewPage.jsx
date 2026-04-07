@@ -259,6 +259,10 @@ export default function ReviewPage() {
   const [error, setError] = useState(null)
   const [dragging, setDragging] = useState(false)
   const [detectedLang, setDetectedLang] = useState(null)
+  
+  const [repoPath, setRepoPath] = useState('')
+  const [ingesting, setIngesting] = useState(false)
+  const [ingestMessage, setIngestMessage] = useState('')
 
   const activeEditorLang = detectedLang?.editorLang || getLangFromFilename(filename)
   const acceptedExtensions = LANGUAGE_PROFILES.map(l => l.extension).join(',')
@@ -283,6 +287,20 @@ export default function ReviewPage() {
       setError(err.response?.data?.detail || 'Review failed. Check if the backend is running.')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleIngest = async () => {
+    if (!repoPath.trim()) return
+    setIngesting(true)
+    setIngestMessage('')
+    try {
+      const { data } = await axios.post('/api/repo/ingest', { repo_path: repoPath })
+      setIngestMessage(data.message || 'Ingestion successful')
+    } catch (err) {
+      setIngestMessage(`Error: ${err.response?.data?.detail || err.message}`)
+    } finally {
+      setIngesting(false)
     }
   }
 
@@ -320,8 +338,30 @@ export default function ReviewPage() {
       {/* ── Header ── */}
       <header
         className="flex-shrink-0 flex items-center justify-between px-8 py-4 border-b border-white/5 backdrop-blur-sm"
-
       >
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <input 
+              type="text" 
+              placeholder="Absolute Repo Path for Context" 
+              value={repoPath}
+              onChange={(e) => setRepoPath(e.target.value)}
+              className="bg-[#0c1018] font-mono text-sm border border-white/10 rounded-md px-3 py-1.5 w-72 outline-none focus:border-blue-500/50 text-gray-200"
+            />
+            <button 
+              onClick={handleIngest}
+              disabled={ingesting || !repoPath.trim()}
+              className="text-sm bg-purple-600/20 text-purple-200 border border-purple-500/30 px-3 py-1.5 rounded-md hover:bg-purple-600/30 disabled:opacity-50 transition-all font-medium"
+            >
+              {ingesting ? 'Ingesting...' : 'Ingest Context'}
+            </button>
+          </div>
+          {ingestMessage && (
+            <span className={`text-xs ${ingestMessage.startsWith('Error') ? 'text-red-400' : 'text-green-400'}`}>
+              {ingestMessage}
+            </span>
+          )}
+        </div>
         {result && (
           <div className="flex items-center gap-3">
             <span className="text-xs text-gray-500">Quality Score</span>

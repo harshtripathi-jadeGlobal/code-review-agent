@@ -15,7 +15,7 @@ It features a high-performance **FastAPI** backend supporting asynchronous opera
 The project employs a robust three-tier architecture augmented by local file indexing. It separates client, application, and data layers, deeply integrating with external LLM inference providers and internal vector stores.
 
 
-![Architecture Diagram](diagrams/architecture%20diagram.png)
+![Architecture Diagram](diagrams/architecture%20RAG.png)
 
 ### Core Technologies
 - **Frontend**: React 18, Vite, React Router, Axios, CSS Modules (Custom Design System).
@@ -30,7 +30,7 @@ The project employs a robust three-tier architecture augmented by local file ind
 The following sequence diagram maps the journey of a user's code submission from the browser to the database and back.
 
 
-![Sequence Diagram](diagrams/sequence%20diagram.png)
+![Sequence Diagram](diagrams/sequence%20RAG.png)
 
 ---
 

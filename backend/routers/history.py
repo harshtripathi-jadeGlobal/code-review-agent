@@ -93,7 +93,9 @@ async def get_stats(db: AsyncSession = Depends(get_db)):
     cat_result = await db.execute(
         select(Issue.category, func.count(Issue.id)).group_by(Issue.category)
     )
-    categories = {row[0]: row[1] for row in cat_result.all()}
+    cat_rows = cat_result.all()
+    print("cat_result rows:", cat_rows)   # prints actual data
+    categories = {row[0]: row[1] for row in cat_rows}
 
     # Weekly breakdown: last 7 days of issues by severity.
     # We rely on Review.created_at and the per-review severity counts.

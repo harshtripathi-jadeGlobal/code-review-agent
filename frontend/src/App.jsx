@@ -1,23 +1,34 @@
 import React, { useEffect, useState } from 'react'
-import { Routes, Route } from 'react-router-dom'
-import Navbar from './pages/Navbar'   // ✅ add navbar
+import { Routes, Route, Navigate } from 'react-router-dom'
+import Navbar from './pages/Navbar'
 import ReviewPage from './pages/ReviewPage'
 import HistoryPage from './pages/HistoryPage'
 import ReviewDetailPage from './pages/ReviewDetailPage'
 import StatsDashboard from './pages/StatisticDashboard'
 import AboutPage from './pages/AboutPage'
+import LoginPage from './pages/LoginPage'
+import SignupPage from './pages/SignupPage'
+import { useAuth } from './context/AuthContext'
 import axios from 'axios'
+
+function PrivateRoute({ children }) {
+  const { currentUser, loading } = useAuth();
+  if (loading) return null;
+  return currentUser ? children : <Navigate to="/login" />;
+}
 
 export default function App() {
 
-  // 🔥 state
   const [stats, setStats] = useState(null)
   const [history, setHistory] = useState([])
-  const [loading, setLoading] = useState(true)
+  const [loadingData, setLoadingData] = useState(true)
   const [error, setError] = useState(null)
+  
+  const { currentUser } = useAuth();
 
-  // 🔥 API call
   useEffect(() => {
+    if (!currentUser) return;
+    setLoadingData(true);
     Promise.all([
       axios.get('/api/history'),
       axios.get('/api/stats'),
@@ -28,59 +39,57 @@ export default function App() {
       })
       .catch(() =>
         setError(
-          'Could not load history or statistics. Make sure the backend is running.'
+          'Could not load history or statistics.'
         )
       )
-      .finally(() => setLoading(false))
-  }, [])
+      .finally(() => setLoadingData(false))
+  }, [currentUser])
 
   return (
     <div className="flex flex-col h-screen overflow-hidden bg-[#0d1017]">
-
-      {/* ✅ TOP NAVBAR */}
       <div className="flex-shrink-0">
         <Navbar />
       </div>
 
-      {/* ✅ PAGE CONTENT */}
       <div className="flex-1 overflow-hidden">
         <Routes>
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/signup" element={<SignupPage />} />
 
-          {/* Home */}
-          <Route path="/" element={<ReviewPage />} />
-
-          {/* History */}
+          <Route path="/" element={<PrivateRoute><ReviewPage /></PrivateRoute>} />
+          
           <Route
             path="/history"
             element={
-              <HistoryPage
-                stats={stats}
-                history={history}
-                loading={loading}
-                error={error}
-              />
+              <PrivateRoute>
+                <HistoryPage
+                  stats={stats}
+                  history={history}
+                  loading={loadingData}
+                  error={error}
+                />
+              </PrivateRoute>
             }
           />
 
-          {/* Detail */}
-          <Route path="/history/:id" element={<ReviewDetailPage />} />
+          <Route path="/history/:id" element={<PrivateRoute><ReviewDetailPage /></PrivateRoute>} />
 
-          {/* Optional pages */}
           <Route
             path="/stats"
             element={
-              <StatsDashboard
-                stats={stats}
-                loading={loading}
-                error={error}
-              />
+              <PrivateRoute>
+                <StatsDashboard
+                  stats={stats}
+                  loading={loadingData}
+                  error={error}
+                />
+              </PrivateRoute>
             }
           />
           <Route path="/about" element={<AboutPage />} />
 
         </Routes>
       </div>
-
     </div>
   )
 }

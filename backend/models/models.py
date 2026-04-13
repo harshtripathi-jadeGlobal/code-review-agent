@@ -16,6 +16,18 @@ class CategoryEnum(str, enum.Enum):
     performance = "performance"
     style = "style"
 
+class User(Base):
+    __tablename__ = "users"
+
+    id = Column(Integer, primary_key=True, index=True)
+    email = Column(String(255), unique=True, index=True, nullable=False)
+    hashed_password = Column(String(255), nullable=True)
+    google_id = Column(String(255), unique=True, index=True, nullable=True)
+    name = Column(String(255), nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    submissions = relationship("Submission", back_populates="user")
+
 class Submission(Base):
     __tablename__ = "submissions"
 
@@ -24,6 +36,9 @@ class Submission(Base):
     language = Column(String(50), nullable=False)
     code = Column(Text, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
+    
+    user_id = Column(Integer, ForeignKey("users.id"), index=True, nullable=True)
+    user = relationship("User", back_populates="submissions")
 
     reviews = relationship(
         "Review",

@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { NavLink } from "react-router-dom";
-import { Code2, History, BarChart3, Info, Menu, X, Zap, ChevronRight } from "lucide-react";
+import { Code2, History, BarChart3, Info, Menu, X, Zap, ChevronRight, User } from "lucide-react";
 import { FiSun, FiMoon } from "react-icons/fi";
+import { useAuth } from "../context/AuthContext";
 
 export default function Navbar() {
+    const { currentUser, logout } = useAuth();
     const [open, setOpen] = useState(false);
     const [theme, setTheme] = useState(() => {
         try {
@@ -197,6 +199,28 @@ export default function Navbar() {
 
                     {/* ── Right side ── */}
                     <div className="flex-shrink-0 flex items-center gap-2 ml-6">
+                        {/* ── User Session ── */}
+                        {currentUser ? (
+                            <div className="flex items-center gap-3 mr-2">
+                                <span className="text-sm font-medium hidden md:flex items-center gap-1" style={{ color: inactiveText }}>
+                                    <User size={14} />
+                                    {currentUser.name || currentUser.email.split('@')[0]}
+                                </span>
+                                <button 
+                                    onClick={logout}
+                                    className="text-xs bg-red-600/20 text-red-500 px-3 py-1.5 rounded-lg border border-red-500/30 hover:bg-red-600/30 transition cursor-pointer"
+                                    title="Logout"
+                                >
+                                    Log out
+                                </button>
+                            </div>
+                        ) : (
+                            <div className="flex items-center gap-3 mr-2">
+                                <NavLink to="/login" className="text-sm font-medium hover:opacity-80 transition" style={{ color: inactiveText }}>
+                                    Log in
+                                </NavLink>
+                            </div>
+                        )}
 
                         {/* Theme toggle */}
                         <button

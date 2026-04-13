@@ -2,17 +2,19 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, desc
 from models.database import get_db
-from models.models import Submission, Review, Issue
+from models.models import Submission, Review, Issue, User
 from datetime import datetime, timedelta
+from routers.auth import get_current_user
 
 router = APIRouter()
 
 
 @router.get("/history")
-async def get_history(limit: int = 20, db: AsyncSession = Depends(get_db)):
+async def get_history(limit: int = 20, db: AsyncSession = Depends(get_db), user: User = Depends(get_current_user)):
     result = await db.execute(
         select(Review, Submission)
         .join(Submission, Review.submission_id == Submission.id)
+        .where(Submission.user_id == user.id)
         .order_by(desc(Review.created_at))
         .limit(limit)
     )
@@ -35,11 +37,12 @@ async def get_history(limit: int = 20, db: AsyncSession = Depends(get_db)):
 
 
 @router.get("/history/{review_id}")
-async def get_review_detail(review_id: int, db: AsyncSession = Depends(get_db)):
+async def get_review_detail(review_id: int, db: AsyncSession = Depends(get_db), user: User = Depends(get_current_user)):
     result = await db.execute(
         select(Review, Submission)
         .join(Submission, Review.submission_id == Submission.id)
         .where(Review.id == review_id)
+        .where(Submission.user_id == user.id)
     )
     row = result.first()
     if not row:
@@ -80,21 +83,24 @@ async def get_review_detail(review_id: int, db: AsyncSession = Depends(get_db)):
 
 
 @router.get("/stats")
-async def get_stats(db: AsyncSession = Depends(get_db)):
+async def get_stats(db: AsyncSession = Depends(get_db), user: User = Depends(get_current_user)):
     from sqlalchemy import func
-    total_reviews = await db.scalar(select(func.count(Review.id)))
-    total_issues  = await db.scalar(select(func.sum(Review.total_issues))) or 0
-    avg_score      = await db.scalar(select(func.avg(Review.score))) or 0
-    critical_total = await db.scalar(select(func.sum(Review.critical_count))) or 0
-    warning_total  = await db.scalar(select(func.sum(Review.warning_count))) or 0
-    info_total     = await db.scalar(select(func.sum(Review.info_count))) or 0
+    total_reviews = await db.scalar(select(func.count(Review.id)).select_from(Review).join(Submission).where(Submission.user_id == user.id))
+    total_issues  = await db.scalar(select(func.sum(Review.total_issues)).select_from(Review).join(Submission).where(Submission.user_id == user.id)) or 0
+    avg_score      = await db.scalar(select(func.avg(Review.score)).select_from(Review).join(Submission).where(Submission.user_id == user.id)) or 0
+    critical_total = await db.scalar(select(func.sum(Review.critical_count)).select_from(Review).join(Submission).where(Submission.user_id == user.id)) or 0
+    warning_total  = await db.scalar(select(func.sum(Review.warning_count)).select_from(Review).join(Submission).where(Submission.user_id == user.id)) or 0
+    info_total     = await db.scalar(select(func.sum(Review.info_count)).select_from(Review).join(Submission).where(Submission.user_id == user.id)) or 0
 
     # Breakdown by issue category (bug / security / performance / style)
     cat_result = await db.execute(
-        select(Issue.category, func.count(Issue.id)).group_by(Issue.category)
+        select(Issue.category, func.count(Issue.id))
+        .join(Review, Issue.review_id == Review.id)
+        .join(Submission, Review.submission_id == Submission.id)
+        .where(Submission.user_id == user.id)
+        .group_by(Issue.category)
     )
     cat_rows = cat_result.all()
-    print("cat_result rows:", cat_rows)   # prints actual data
     categories = {row[0]: row[1] for row in cat_rows}
 
     # Weekly breakdown: last 7 days of issues by severity.
@@ -107,6 +113,8 @@ async def get_stats(db: AsyncSession = Depends(get_db)):
             func.sum(Review.warning_count),
             func.sum(Review.info_count),
         )
+        .select_from(Review).join(Submission)
+        .where(Submission.user_id == user.id)
         .where(Review.created_at >= seven_days_ago)
         .group_by(func.date(Review.created_at))
         .order_by(func.date(Review.created_at))

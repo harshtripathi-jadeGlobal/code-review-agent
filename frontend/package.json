@@ -10,6 +10,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@react-oauth/google": "^0.13.5",
     "@tailwindcss/vite": "^4.2.2",
     "axios": "^1.7.2",
     "file-saver": "^2.0.5",

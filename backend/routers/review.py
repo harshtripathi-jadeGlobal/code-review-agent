@@ -4,8 +4,9 @@ from sqlalchemy import select
 from pydantic import BaseModel
 from typing import Optional
 from models.database import get_db
-from models.models import Submission, Review, Issue
+from models.models import Submission, Review, Issue, User
 from services.llm_service import run_review, detect_language
+from routers.auth import get_current_user
 
 router = APIRouter()
 
@@ -17,14 +18,14 @@ class CodeSubmitRequest(BaseModel):
 
 
 @router.post("/review")
-async def submit_review(req: CodeSubmitRequest, db: AsyncSession = Depends(get_db)):
+async def submit_review(req: CodeSubmitRequest, db: AsyncSession = Depends(get_db), user: User = Depends(get_current_user)):
     if not req.code.strip():
         raise HTTPException(status_code=400, detail="Code cannot be empty")
 
     lang = req.language or detect_language(req.filename or "", req.code)
 
     # Save submission
-    submission = Submission(filename=req.filename, language=lang, code=req.code)
+    submission = Submission(filename=req.filename, language=lang, code=req.code, user_id=user.id)
     db.add(submission)
     await db.flush()
 

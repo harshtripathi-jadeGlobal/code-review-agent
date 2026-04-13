@@ -24,6 +24,7 @@ class User(Base):
     hashed_password = Column(String(255), nullable=True)
     google_id = Column(String(255), unique=True, index=True, nullable=True)
     name = Column(String(255), nullable=True)
+    github_access_token = Column(String(255), nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
 
     submissions = relationship("Submission", back_populates="user")

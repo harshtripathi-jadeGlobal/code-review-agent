@@ -8,6 +8,7 @@ import StatsDashboard from './pages/StatisticDashboard'
 import AboutPage from './pages/AboutPage'
 import LoginPage from './pages/LoginPage'
 import SignupPage from './pages/SignupPage'
+import GithubCallback from './pages/GithubCallback'
 import { useAuth } from './context/AuthContext'
 import axios from 'axios'
 
@@ -55,6 +56,7 @@ export default function App() {
         <Routes>
           <Route path="/login" element={<LoginPage />} />
           <Route path="/signup" element={<SignupPage />} />
+          <Route path="/auth/github/callback" element={<GithubCallback />} />
 
           <Route path="/" element={<PrivateRoute><ReviewPage /></PrivateRoute>} />
           

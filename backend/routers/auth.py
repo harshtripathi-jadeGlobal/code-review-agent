@@ -107,5 +107,6 @@ async def get_me(user: User = Depends(get_current_user)):
     return {
         "id": user.id,
         "email": user.email,
-        "name": user.name
+        "name": user.name,
+        "github_linked": True if user.github_access_token else False
     }

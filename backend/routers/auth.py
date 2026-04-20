@@ -1,5 +1,6 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from pydantic import BaseModel
+from typing import Optional
 from sqlalchemy.orm import Session
 from sqlalchemy.future import select
 from models.database import get_db
@@ -41,6 +42,24 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = De
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
         
     return user
+
+async def get_optional_current_user(request: Request, db: Session = Depends(get_db)):
+    auth_header = request.headers.get("Authorization")
+    if not auth_header or not auth_header.startswith("Bearer "):
+        return None
+    
+    token = auth_header.split(" ")[1]
+    try:
+        claims = decode_jwe_token(token)
+        if not claims or "sub" not in claims:
+            return None
+        
+        user_id = claims["sub"]
+        result = await db.execute(select(User).where(User.id == user_id))
+        user = result.scalars().first()
+        return user
+    except Exception:
+        return None
 
 @router.post("/signup")
 async def signup(data: NativeSignup, db: Session = Depends(get_db)):

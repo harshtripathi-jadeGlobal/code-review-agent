@@ -260,7 +260,7 @@ export default function ReviewPage() {
   const [error, setError] = useState(null)
   const [dragging, setDragging] = useState(false)
   const [detectedLang, setDetectedLang] = useState(null)
-  
+
   const { currentUser, fetchUser } = useAuth()
   const [showGithubModal, setShowGithubModal] = useState(false)
   const [githubRepos, setGithubRepos] = useState([])
@@ -268,6 +268,10 @@ export default function ReviewPage() {
   const [fetchingGithub, setFetchingGithub] = useState(false)
   const [currentPath, setCurrentPath] = useState('')
   const [dirContents, setDirContents] = useState([])
+  const [githubTab, setGithubTab] = useState('my-repos') // 'my-repos' or 'any-repo'
+  const [publicRepoUrl, setPublicRepoUrl] = useState('')
+  const [publicBranch, setPublicBranch] = useState('')
+  const [repoError, setRepoError] = useState('')
 
   const activeEditorLang = detectedLang?.editorLang || getLangFromFilename(filename)
   const acceptedExtensions = LANGUAGE_PROFILES.map(l => l.extension).join(',')
@@ -329,17 +333,37 @@ export default function ReviewPage() {
     }
   }
 
-  const fetchGithubContent = async (reqPath, reqRepo) => {
+  const fetchGithubContent = async (reqPath, reqRepo, reqRef) => {
     const repoToUse = reqRepo || selectedRepo;
+    const refToUse = reqRef || publicBranch;
+    
     if (!repoToUse) return;
     setFetchingGithub(true);
+    setRepoError('');
+    
     try {
       const parts = repoToUse.split('/');
-      const owner = encodeURIComponent(parts[0]);
-      const repo = encodeURIComponent(parts[1]);
+      // Handle cases where full URL might be provided
+      let owner, repo;
+      if (repoToUse.includes('github.com/')) {
+        const urlParts = repoToUse.split('github.com/')[1].split('/');
+        owner = urlParts[0];
+        repo = urlParts[1];
+      } else {
+        owner = parts[0];
+        repo = parts[1];
+      }
+      
+      const encodedOwner = encodeURIComponent(owner);
+      const encodedRepo = encodeURIComponent(repo);
       const encodedPath = encodeURIComponent(reqPath);
       
-      const { data } = await axios.get(`/api/github/repos/${owner}/${repo}/contents?path=${encodedPath}`)
+      let apiUrl = `/api/github/repos/${encodedOwner}/${encodedRepo}/contents?path=${encodedPath}`;
+      if (refToUse) {
+        apiUrl += `&ref=${encodeURIComponent(refToUse)}`;
+      }
+
+      const { data } = await axios.get(apiUrl)
       if (data.type === 'dir') {
         setCurrentPath(reqPath);
         setDirContents(data.items);
@@ -349,10 +373,42 @@ export default function ReviewPage() {
         setShowGithubModal(false);
       }
     } catch (err) {
-      alert(err.response?.data?.detail || 'Failed to fetch content from GitHub.');
+      const msg = err.response?.data?.detail || 'Failed to fetch content from GitHub.';
+      setRepoError(msg);
+      if (githubTab === 'my-repos') alert(msg);
     } finally {
       setFetchingGithub(false);
     }
+  }
+
+  const handleFetchPublicRepo = () => {
+    // Validation: check for owner/repo pattern
+    const slugRegex = /^([^/]+)\/([^/]+)$/;
+    const urlRegex = /github\.com\/([^/]+)\/([^/]+)/;
+    
+    let isValid = false;
+    let slug = publicRepoUrl.trim();
+    
+    if (slugRegex.test(slug)) {
+      isValid = true;
+    } else {
+      const match = slug.match(urlRegex);
+      if (match) {
+        slug = `${match[1]}/${match[2]}`;
+        isValid = true;
+      }
+    }
+    
+    if (!isValid) {
+      setRepoError('Please enter a valid repository (owner/repo) or GitHub URL.');
+      return;
+    }
+    
+    setRepoError('');
+    setSelectedRepo(slug);
+    setCurrentPath('');
+    setDirContents([]);
+    fetchGithubContent('', slug, publicBranch);
   }
 
   return (
@@ -412,7 +468,7 @@ export default function ReviewPage() {
                 <input type="file" accept={acceptedExtensions} className="hidden"
                   onChange={(e) => handleFile(e.target.files[0])} />
               </label>
-              
+
               <button
                 className="flex items-center gap-1.5 text-sm text-gray-300 hover:text-gray-200 hover:bg-white/5 border border-transparent hover:border-white/10 rounded-md px-2.5 py-1.5 transition-all"
                 onClick={() => {
@@ -579,7 +635,7 @@ export default function ReviewPage() {
           )}
         </div>
       </div>
-      
+
       {/* ── GitHub Modal ── */}
       {showGithubModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
@@ -587,10 +643,75 @@ export default function ReviewPage() {
             <h3 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
               <Github /> Fetch from GitHub
             </h3>
-            
-            {!currentUser?.github_linked && (
+
+            <div className="flex border-b border-white/5 mb-6">
+              <button
+                className={`px-4 py-2 text-sm font-medium transition-all border-b-2 ${githubTab === 'my-repos' ? 'text-blue-400 border-blue-400' : 'text-gray-500 border-transparent hover:text-gray-300'}`}
+                onClick={() => {
+                  setGithubTab('my-repos');
+                  setRepoError('');
+                  setSelectedRepo('');
+                  setDirContents([]);
+                }}
+              >
+                My Repositories
+              </button>
+              <button
+                className={`px-4 py-2 text-sm font-medium transition-all border-b-2 ${githubTab === 'any-repo' ? 'text-blue-400 border-blue-400' : 'text-gray-500 border-transparent hover:text-gray-300'}`}
+                onClick={() => {
+                  setGithubTab('any-repo');
+                  setRepoError('');
+                  setSelectedRepo('');
+                  setDirContents([]);
+                }}
+              >
+                Public Repository
+              </button>
+            </div>
+
+            {githubTab === 'any-repo' && (
+              <div className="space-y-4 mb-6">
+                <div>
+                  <label className="block text-xs text-gray-500 mb-1.5 uppercase tracking-wider font-semibold">Repository URL or Slug</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. facebook/react or github.com/owner/repo"
+                    value={publicRepoUrl}
+                    onChange={(e) => setPublicRepoUrl(e.target.value)}
+                    className="w-full bg-gray-800/50 border border-white/10 rounded-lg p-3 text-white outline-none focus:border-blue-500/50 transition-all text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs text-gray-500 mb-1.5 uppercase tracking-wider font-semibold">Branch / Ref (Optional)</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. main, develop, or v1.0"
+                    value={publicBranch}
+                    onChange={(e) => setPublicBranch(e.target.value)}
+                    className="w-full bg-gray-800/50 border border-white/10 rounded-lg p-3 text-white outline-none focus:border-blue-500/50 transition-all text-sm"
+                  />
+                </div>
+                {repoError && (
+                  <p className="text-xs text-red-400 bg-red-400/10 p-2 rounded border border-red-400/20">{repoError}</p>
+                )}
+                <button
+                  onClick={handleFetchPublicRepo}
+                  disabled={fetchingGithub || !publicRepoUrl.trim()}
+                  className="w-full py-3 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 text-white rounded-lg font-semibold transition-all shadow-lg flex items-center justify-center gap-2"
+                >
+                  {fetchingGithub ? (
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  ) : (
+                    <Sparkles size={16} />
+                  )}
+                  <span>Fetch Repository</span>
+                </button>
+              </div>
+            )}
+
+            {githubTab === 'my-repos' && !currentUser?.github_linked && (
               <div className="text-center py-6">
-                <p className="text-gray-400 mb-6 font-medium">Authorize access to fetch your repositories (public & private)</p>
+                <p className="text-gray-400 mb-6 font-medium text-sm">Authorize access to fetch your repositories (public & private)</p>
                 <button
                   className="px-6 py-3 bg-gray-800 hover:bg-gray-700 border border-white/10 text-white rounded-lg flex items-center justify-center gap-2 w-full transition-all font-semibold shadow-lg"
                   onClick={() => {
@@ -598,7 +719,7 @@ export default function ReviewPage() {
                     window.location.href = `https://github.com/login/oauth/authorize?client_id=${clientId}&scope=repo read:user&prompt=consent`;
                   }}
                 >
-                  <Github /> Login with GitHub
+                  <Github size={18} /> Login with GitHub
                 </button>
                 <div className="mt-4 flex justify-end">
                   <button
@@ -610,34 +731,38 @@ export default function ReviewPage() {
                 </div>
               </div>
             )}
-            
-            {currentUser?.github_linked && (
+
+            {(githubTab === 'any-repo' || currentUser?.github_linked) && (
               <>
-                <label className="block text-sm text-gray-400 mb-1">Select Repository</label>
-                <select
-                  value={selectedRepo}
-                  onChange={(e) => {
-                    setSelectedRepo(e.target.value);
-                    setCurrentPath('');
-                    setDirContents([]);
-                    if (e.target.value) {
-                      fetchGithubContent('', e.target.value);
-                    }
-                  }}
-                  className="w-full bg-gray-800 border border-white/10 rounded p-2 mb-4 text-white outline-none focus:border-blue-500"
-                >
-                  <option value="">-- Choose a repo --</option>
-                  {githubRepos.map(r => (
-                    <option key={r.id} value={r.full_name}>{r.full_name}</option>
-                  ))}
-                </select>
-                
+                {githubTab === 'my-repos' && (
+                  <>
+                    <label className="block text-sm text-gray-400 mb-1">Select Repository</label>
+                    <select
+                      value={selectedRepo}
+                      onChange={(e) => {
+                        setSelectedRepo(e.target.value);
+                        setCurrentPath('');
+                        setDirContents([]);
+                        if (e.target.value) {
+                          fetchGithubContent('', e.target.value);
+                        }
+                      }}
+                      className="w-full bg-gray-800 border border-white/10 rounded p-2 mb-4 text-white outline-none focus:border-blue-500"
+                    >
+                      <option value="">-- Choose a repo --</option>
+                      {githubRepos.map(r => (
+                        <option key={r.id} value={r.full_name}>{r.full_name}</option>
+                      ))}
+                    </select>
+                  </>
+                )}
+
                 {selectedRepo && (
-                  <div className="flex flex-col h-64 bg-gray-800/50 border border-white/10 rounded overflow-hidden">
-                    <div className="flex items-center px-3 py-2 bg-gray-800 border-b border-white/10 text-xs text-gray-400">
+                  <div className="flex flex-col h-64 bg-gray-800/50 border border-white/10 rounded-lg overflow-hidden shadow-inner">
+                    <div className="flex items-center px-3 py-2 bg-gray-800/80 border-b border-white/10 text-[11px] text-gray-400">
                       {currentPath ? (
                         <>
-                          <button 
+                          <button
                             onClick={() => {
                               const newPath = currentPath.split('/').slice(0, -1).join('/');
                               fetchGithubContent(newPath);
@@ -647,24 +772,30 @@ export default function ReviewPage() {
                           <span className="truncate">/{currentPath}</span>
                         </>
                       ) : (
-                        <span>/ root</span>
+                        <div className="flex items-center gap-2">
+                          <span className="opacity-50">📂</span>
+                          <span className="truncate font-mono">{selectedRepo}</span>
+                        </div>
                       )}
                     </div>
-                    
-                    <div className="flex-1 overflow-y-auto">
+
+                    <div className="flex-1 overflow-y-auto custom-scrollbar">
                       {fetchingGithub ? (
-                        <div className="flex items-center justify-center h-full text-blue-400 text-sm animate-pulse">Fetching contents...</div>
+                        <div className="flex flex-col items-center justify-center h-full text-blue-400 gap-3">
+                          <div className="w-5 h-5 border-2 border-blue-400/30 border-t-blue-400 rounded-full animate-spin" />
+                          <span className="text-xs font-medium animate-pulse">Loading files...</span>
+                        </div>
                       ) : dirContents.length === 0 ? (
-                        <div className="flex items-center justify-center h-full text-gray-500 text-sm">Empty directory</div>
+                        <div className="flex items-center justify-center h-full text-gray-600 text-sm">Empty directory</div>
                       ) : (
-                        <div className="flex flex-col pb-2">
+                        <div className="flex flex-col">
                           {dirContents.map((item) => (
                             <button
                               key={item.path}
                               onClick={() => fetchGithubContent(item.path)}
-                              className="flex items-center gap-3 px-4 py-2 hover:bg-blue-500/10 text-sm text-left transition-colors border-b border-white/5 last:border-0 group"
+                              className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 text-xs text-left transition-colors border-b border-white/5 last:border-0 group"
                             >
-                              <span className="text-lg opacity-80 group-hover:opacity-100 transition-opacity">
+                              <span className="text-base opacity-70 group-hover:opacity-100 transition-opacity">
                                 {item.type === 'dir' ? '📁' : '📄'}
                               </span>
                               <span className="text-gray-300 group-hover:text-white truncate">{item.name}</span>
@@ -675,27 +806,29 @@ export default function ReviewPage() {
                     </div>
                   </div>
                 )}
-                
+
                 <div className="flex items-center justify-between mt-6">
+                  {currentUser?.github_linked && githubTab === 'my-repos' ? (
+                    <button
+                      className="text-xs text-red-500/80 hover:text-red-400 font-medium transition-colors"
+                      onClick={async () => {
+                        if (!window.confirm('Are you sure you want to disconnect your GitHub account?')) return;
+                        try {
+                          await axios.delete('/api/github/unlink');
+                          await fetchUser();
+                          setSelectedRepo('');
+                          setCurrentPath('');
+                          setDirContents([]);
+                        } catch (err) {
+                          alert('Failed to disconnect GitHub account.');
+                        }
+                      }}
+                    >
+                      Disconnect Account
+                    </button>
+                  ) : <div />}
                   <button
-                    className="text-sm text-red-500 hover:text-red-400 font-medium transition-colors"
-                    onClick={async () => {
-                      if (!window.confirm('Are you sure you want to disconnect your GitHub account?')) return;
-                      try {
-                        await axios.delete('/api/github/unlink');
-                        await fetchUser();
-                        setSelectedRepo('');
-                        setCurrentPath('');
-                        setDirContents([]);
-                      } catch (err) {
-                        alert('Failed to disconnect GitHub account.');
-                      }
-                    }}
-                  >
-                    Disconnect Account
-                  </button>
-                  <button
-                    className="px-6 py-2 rounded-lg text-gray-300 hover:text-white bg-gray-800 hover:bg-gray-700 border border-white/10 transition-all font-medium"
+                    className="px-6 py-2 rounded-lg text-sm text-gray-400 hover:text-white bg-gray-800 hover:bg-gray-700 border border-white/10 transition-all font-medium"
                     onClick={() => setShowGithubModal(false)}
                   >
                     Close

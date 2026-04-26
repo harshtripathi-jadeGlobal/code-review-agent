@@ -260,6 +260,7 @@ export default function ReviewPage() {
   const [error, setError] = useState(null)
   const [dragging, setDragging] = useState(false)
   const [detectedLang, setDetectedLang] = useState(null)
+  const [contextFiles, setContextFiles] = useState([])
 
   const { currentUser, fetchUser } = useAuth()
   const [showGithubModal, setShowGithubModal] = useState(false)
@@ -290,7 +291,11 @@ export default function ReviewPage() {
     if (!code.trim()) return
     setLoading(true); setError(null); setResult(null)
     try {
-      const { data } = await axios.post('/api/review', { code, filename })
+      const { data } = await axios.post('/api/review', { 
+        code, 
+        filename,
+        context_files: contextFiles.length > 0 ? contextFiles : undefined
+      })
       setResult(data)
     } catch (err) {
       setError(err.response?.data?.detail || 'Review failed. Check if the backend is running.')
@@ -301,7 +306,7 @@ export default function ReviewPage() {
 
   const handleReset = () => {
     setCode(''); setResult(null); setError(null)
-    setDetectedLang(null); setFilename('main.py')
+    setDetectedLang(null); setFilename('main.py'); setContextFiles([])
   }
 
   const handleFile = (file) => {
@@ -313,6 +318,21 @@ export default function ReviewPage() {
     const reader = new FileReader()
     reader.onload = (e) => setCode(e.target.result)
     reader.readAsText(file)
+  }
+
+  const handleContextFiles = async (files) => {
+    if (!files || files.length === 0) return;
+    const newContextFiles = [];
+    for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const text = await new Promise(resolve => {
+            const reader = new FileReader()
+            reader.onload = (e) => resolve(e.target.result)
+            reader.readAsText(file)
+        })
+        newContextFiles.push({ filename: file.name, code: text })
+    }
+    setContextFiles(prev => [...prev, ...newContextFiles])
   }
 
   const handleDrop = useCallback((e) => {
@@ -464,9 +484,16 @@ export default function ReviewPage() {
             <div className="flex items-center gap-8">
               <label className="flex items-center gap-1.5 text-sm text-gray-300 hover:text-gray-200 hover:bg-white/5 rounded-md px-2.5 py-1.5 cursor-pointer transition-all border border-transparent hover:border-white/10">
                 <Upload className='text-[14px]' />
-                <span>Upload</span>
+                <span>Upload Code</span>
                 <input type="file" accept={acceptedExtensions} className="hidden"
                   onChange={(e) => handleFile(e.target.files[0])} />
+              </label>
+
+              <label className="flex items-center gap-1.5 text-sm text-amber-200 hover:text-amber-100 hover:bg-white/5 rounded-md px-2.5 py-1.5 cursor-pointer transition-all border border-transparent hover:border-white/10" title="Upload files to serve as context for the Code Review Agent RAG">
+                <Sparkles className='text-[14px]' />
+                <span>Add Context</span>
+                <input type="file" multiple accept={acceptedExtensions} className="hidden"
+                  onChange={(e) => handleContextFiles(e.target.files)} />
               </label>
 
               <button
@@ -513,6 +540,18 @@ export default function ReviewPage() {
             onDragLeave={handleDragLeave}
             dragging={dragging}
           />
+
+          {contextFiles.length > 0 && (
+            <div className="px-4 py-2 bg-[#0c1018] border-t border-white/5 flex flex-wrap gap-2 items-center flex-shrink-0">
+              <span className="text-xs text-gray-500 mr-2 flex items-center gap-1"><Sparkles size={12}/> Context Files:</span>
+              {contextFiles.map((cf, idx) => (
+                <div key={idx} className="flex items-center gap-1 text-[11px] bg-white/10 border border-white/10 px-2 py-0.5 rounded text-gray-300 shadow-sm">
+                  {cf.filename}
+                  <button onClick={() => setContextFiles(prev => prev.filter((_, i) => i !== idx))} className="hover:text-red-400 ml-1 transition-colors">✕</button>
+                </div>
+              ))}
+            </div>
+          )}
 
           {/* Footer */}
           <div className="flex items-center justify-between px-4 py-2.5 border-t border-white/5 bg-[#0c1018] flex-shrink-0">

@@ -85,5 +85,6 @@ class Issue(Base):
 
     code_before = Column(Text, nullable=True)
     code_after = Column(Text, nullable=True)
+    cited_files = Column(String(255), nullable=True)
 
     review = relationship("Review", back_populates="issues")

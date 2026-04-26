@@ -125,7 +125,7 @@ function CodeSnippet({ code, lang = 'python', label, variant, isDark }) {
 export default function IssueCard({ issue, index, expanded, onToggle, isDark }) {
   const {
     category, severity, line_number, title,
-    description, fix_suggestion, code_before, code_after,
+    description, fix_suggestion, code_before, code_after, cited_files
   } = issue
 
   const lang = code_before?.includes('def ') || code_before?.includes('import ')
@@ -145,6 +145,7 @@ export default function IssueCard({ issue, index, expanded, onToggle, isDark }) 
     '',
     code_before ? `Before:\n${code_before}` : '',
     code_after ? `After:\n${code_after}` : '',
+    cited_files && cited_files.length ? `Cited Files: ${cited_files.join(', ')}` : '',
     '',
     fix_suggestion ? `Fix: ${fix_suggestion}` : '',
   ].filter(Boolean).join('\n')
@@ -261,6 +262,20 @@ export default function IssueCard({ issue, index, expanded, onToggle, isDark }) 
               }`} style={{ margin: 0 }}>
                 {fix_suggestion}
               </p>
+            </div>
+          )}
+
+          {/* Cited files */}
+          {cited_files && cited_files.length > 0 && (
+            <div className={`mt-2 flex items-center gap-2 ${isDark ? 'text-gray-400' : 'text-gray-500'} text-xs font-mono`}>
+              <span>Cited files: </span>
+              <div className="flex gap-2 flex-wrap">
+                {cited_files.map((file, i) => (
+                  <span key={i} className={`px-2 py-0.5 rounded border ${isDark ? 'bg-white/5 border-white/10 text-gray-300' : 'bg-black/5 border-black/10 text-gray-700'}`}>
+                    {file}
+                  </span>
+                ))}
+              </div>
             </div>
           )}
 

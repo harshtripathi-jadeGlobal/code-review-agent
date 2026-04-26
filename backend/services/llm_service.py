@@ -24,16 +24,17 @@ The JSON must follow this exact structure:
       "severity": "critical" | "warning" | "info",
       "line_number": <integer or null>,
       "title": "<short title>",
-      "description": "<detailed explanation of the problem>",
+      "description": "<detailed explanation of the problem. Properly find out the error incorporating the provided context if applicable.>",
       "fix_suggestion": "<clear actionable fix>",
-      "code_before": "<problematic code snippet>",
-      "code_after": "<fixed code snippet>"
+      "code_before": "<exact problematic code snippet from the code>",
+      "code_after": "<exact fixed code snippet that properly integrates the fix based on context>",
+      "cited_files": ["<ONLY include exact filenames from the provided RAG context that you used. Do NOT invent filenames. Leave empty [] if none used>"]
     }}
   ],
   "score": <integer 0-100, overall code quality>,
   "summary": "<2-3 sentence overall assessment>"
 }}
-
+{rag_context_section}
 Code to review:
 ```{language}
 {code}
@@ -41,8 +42,9 @@ Code to review:
 
 Return only the JSON object. No markdown fences. No extra text."""
 
-async def call_internal_llama(code: str, language: str) -> dict:
-    prompt = REVIEW_PROMPT.format(language=language, code=code)
+async def call_internal_llama(code: str, language: str, rag_context: str = "") -> dict:
+    rag_section = f"\n{rag_context}\n" if rag_context else ""
+    prompt = REVIEW_PROMPT.format(language=language, code=code, rag_context_section=rag_section)
     
     # Using /generate payload format
     base_url = LLAMA_BASE_URL if LLAMA_BASE_URL else ""
@@ -69,8 +71,9 @@ async def call_internal_llama(code: str, language: str) -> dict:
         return parse_llm_response(content)
 
 
-async def call_groq(code: str, language: str) -> dict:
-    prompt = REVIEW_PROMPT.format(language=language, code=code)
+async def call_groq(code: str, language: str, rag_context: str = "") -> dict:
+    rag_section = f"\n{rag_context}\n" if rag_context else ""
+    prompt = REVIEW_PROMPT.format(language=language, code=code, rag_context_section=rag_section)
     
     async with httpx.AsyncClient(timeout=60) as client:
         resp = await client.post(
@@ -92,8 +95,9 @@ async def call_groq(code: str, language: str) -> dict:
         return parse_llm_response(content)
 
 
-async def call_openai(code: str, language: str) -> dict:
-    prompt = REVIEW_PROMPT.format(language=language, code=code)
+async def call_openai(code: str, language: str, rag_context: str = "") -> dict:
+    rag_section = f"\n{rag_context}\n" if rag_context else ""
+    prompt = REVIEW_PROMPT.format(language=language, code=code, rag_context_section=rag_section)
     async with httpx.AsyncClient(timeout=60) as client:
         resp = await client.post(
             "https://api.openai.com/v1/chat/completions",
@@ -140,13 +144,13 @@ def detect_language(filename: str, code: str) -> str:
     return "javascript"
 
 
-async def run_review(code: str, language: str) -> dict:
+async def run_review(code: str, language: str, rag_context: str = "") -> dict:
     if LLM_PROVIDER:
-        return await call_internal_llama(code, language)
+        return await call_internal_llama(code, language, rag_context)
     elif GROQ_API_KEY:
-        return await call_groq(code, language)
+        return await call_groq(code, language, rag_context)
     elif OPENAI_API_KEY:
-        return await call_openai(code, language)
+        return await call_openai(code, language, rag_context)
     else:
         # Demo mode - return sample issues
         return demo_review(code, language)
@@ -166,7 +170,8 @@ def demo_review(code: str, language: str) -> dict:
                 "description": "User input is directly interpolated into the SQL query string without sanitization or parameterization. An attacker can manipulate the query to access or destroy data.",
                 "fix_suggestion": "Use parameterized queries or an ORM to handle user input safely.",
                 "code_before": 'query = f"SELECT * FROM users WHERE id = {user_id}"',
-                "code_after": 'query = "SELECT * FROM users WHERE id = %s"\ncursor.execute(query, (user_id,))'
+                "code_after": 'query = "SELECT * FROM users WHERE id = %s"\ncursor.execute(query, (user_id,))',
+                "cited_files": ["security_guidelines.md"]
             },
             {
                 "category": "bug",
